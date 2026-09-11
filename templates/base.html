@@ -1,3 +1,4 @@
+{% load static %}
 {# ============================================================================= #}
 {# FL3D Manager - Template Mestre da Aplicação (base.html)                       #}
 {# ============================================================================= #}
@@ -79,13 +80,16 @@
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
             letter-spacing: 0.5px;
         }
 
-        .navbar-fl3d .brand i {
-            color: var(--accent-yellow);
-            font-size: 1.3rem;
+        .navbar-fl3d .brand img.brand-logo {
+            height: 36px;
+            width: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.25);
         }
 
         .navbar-fl3d .nav-right {
@@ -278,7 +282,8 @@
          ================================================================ -->
     <header class="navbar-fl3d">
         <a class="brand" href="{% url 'dashboard:index' %}">
-            <i class="bi bi-box-fill"></i> FL3D Manager
+            <img src="{% static 'img/logo.jpg' %}" alt="FL3D Studio Logo" class="brand-logo">
+            <span>FL3D Manager</span>
         </a>
         <div class="nav-right">
             <span><i class="bi bi-person-circle me-1"></i>Olá, {{ user.username }}</span>
