@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Produto - FL3D Manager{% endblock %}
+{% block page_title %}{{ produto.nome }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'produtos:lista' %}" class="btn btn-secondary me-2">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+<a href="{% url 'produtos:editar' produto.pk %}" class="btn btn-primary me-2">
+    <i class="bi bi-pencil"></i> Editar
+</a>
+<a href="{% url 'produtos:excluir' produto.pk %}" class="btn btn-danger">
+    <i class="bi bi-trash"></i> Excluir
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Imagem e Status -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center">
+                {% if produto.foto %}
+                    <img src="{{ produto.foto.url }}" alt="{{ produto.nome }}" class="img-fluid rounded mb-3 shadow" style="max-height: 250px; object-fit: contain;">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded mb-3 shadow-sm mx-auto" style="height: 250px; font-size: 5rem; color: #ccc;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                {% endif %}
+                
+                <h4 class="mb-1">{{ produto.nome }}</h4>
+                <p class="text-muted">{{ produto.codigo|default:"Sem Código" }}</p>
+                
+                <div class="mb-3">
+                    {% if produto.ativo %}
+                        <span class="badge bg-success fs-6">Ativo</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">Inativo</span>
+                    {% endif %}
+                </div>
+                
+                <div class="alert alert-success fw-bold fs-5 mt-4 text-start">
+                    <div class="d-flex justify-content-between">
+                        <span>Preço de Venda:</span>
+                        <span>R$ {{ produto.preco_venda }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detalhes Técnicos e Financeiros -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-info-circle me-2"></i>Informações Detalhadas</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Informações Básicas -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="border-bottom pb-2 text-muted">Especificações</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                Categoria
+                                <span class="fw-bold">{{ produto.categoria|default:"-" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                Material
+                                <span class="fw-bold">{{ produto.material|default:"-" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                Cor Sugerida
+                                <span class="fw-bold">{{ produto.cor|default:"-" }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Ficha Técnica -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="border-bottom pb-2 text-muted">Ficha Técnica e Custos</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span title="Tempo Estimado de Impressão"><i class="bi bi-clock me-1"></i> Tempo</span>
+                                <span class="fw-bold text-primary">{{ produto.tempo_estimado|default:"-" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span title="Peso Estimado"><i class="bi bi-speedometer2 me-1"></i> Peso (g)</span>
+                                <span class="fw-bold">{{ produto.peso_estimado }}g</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span title="Custo Base Estimado"><i class="bi bi-cash me-1"></i> Custo Base</span>
+                                <span class="fw-bold text-danger">R$ {{ produto.custo_estimado }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>Margem de Lucro</span>
+                                <span class="fw-bold">{{ produto.margem_lucro|default:"-" }}%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {% if produto.descricao or produto.observacoes %}
+                <div class="row mt-2 border-top pt-3">
+                    {% if produto.descricao %}
+                    <div class="col-12 mb-3">
+                        <h6 class="text-muted">Descrição</h6>
+                        <p>{{ produto.descricao|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if produto.observacoes %}
+                    <div class="col-12">
+                        <h6 class="text-muted">Observações Internas</h6>
+                        <div class="bg-light p-3 rounded">
+                            {{ produto.observacoes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

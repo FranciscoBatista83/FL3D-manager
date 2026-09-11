@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajuste de Estoque - FL3D Manager{% endblock %}
+{% block page_title %}Ajuste de Estoque{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'estoque:detalhe' filamento.pk %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <!-- Card do Filamento -->
+        <div class="card shadow-sm mb-4 border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">{{ filamento.material }} {{ filamento.cor }}</h5>
+                        <span class="text-muted">{{ filamento.marca }}</span>
+                    </div>
+                    <div class="text-end">
+                        <div class="fs-4 fw-bold text-primary">{{ filamento.peso_atual }}g</div>
+                        <small class="text-muted">Saldo teórico atual</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de Ajuste -->
+        <div class="card shadow-sm border-warning">
+            <div class="card-header bg-warning text-dark py-3">
+                <h6 class="m-0"><i class="bi bi-sliders me-2"></i>Informar Peso Físico Real</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Pese o rolo de filamento na balança e informe o peso real abaixo. 
+                    O sistema calculará a diferença e registrará um <strong>Ajuste</strong> no histórico automaticamente.
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.peso_fisico.label }}</label>
+                        <div class="input-group input-group-lg">
+                            {{ form.peso_fisico }}
+                            <span class="input-group-text">g</span>
+                        </div>
+                        {{ form.peso_fisico.help_text|safe }}
+                        <div class="text-danger small">{{ form.peso_fisico.errors }}</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">{{ form.motivo.label }}</label>
+                        {{ form.motivo }}
+                        <div class="text-danger small">{{ form.motivo.errors }}</div>
+                    </div>
+
+                    <!-- Preview da diferença (via JS) -->
+                    <div class="card bg-light mb-4" id="preview-diferenca" style="display:none;">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Saldo teórico:</span>
+                                <span class="fw-bold">{{ filamento.peso_atual }}g</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Peso físico informado:</span>
+                                <span class="fw-bold" id="preview-fisico">-</span>
+                            </div>
+                            <hr class="my-1">
+                            <div class="d-flex justify-content-between">
+                                <span>Diferença:</span>
+                                <span class="fw-bold" id="preview-diff">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end border-top pt-3">
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="bi bi-check-circle"></i> Confirmar Ajuste
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const saldoAtual = {{ filamento.peso_atual }};
+const inputFisico = document.querySelector('[name="peso_fisico"]');
+const preview = document.getElementById('preview-diferenca');
+const previewFisico = document.getElementById('preview-fisico');
+const previewDiff = document.getElementById('preview-diff');
+
+inputFisico.addEventListener('input', function() {
+    const fisico = parseFloat(this.value) || 0;
+    if (fisico >= 0) {
+        const diff = fisico - saldoAtual;
+        preview.style.display = 'block';
+        previewFisico.textContent = fisico.toFixed(2) + 'g';
+        const sinal = diff >= 0 ? '+' : '';
+        previewDiff.textContent = sinal + diff.toFixed(2) + 'g';
+        previewDiff.className = 'fw-bold ' + (diff >= 0 ? 'text-success' : 'text-danger');
+    } else {
+        preview.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

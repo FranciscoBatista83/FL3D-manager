@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - FL3D Manager{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'impressoras:lista' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-printer me-2"></i>Dados da Impressora</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label fw-bold">{{ form.nome.label }} *</label>
+                            {{ form.nome }}
+                            <div class="text-danger small">{{ form.nome.errors }}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.status.label }}</label>
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.fabricante.label }}</label>
+                            {{ form.fabricante }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.modelo.label }}</label>
+                            {{ form.modelo }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.numero_identificacao.label }}</label>
+                            {{ form.numero_identificacao }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.data_aquisicao.label }}</label>
+                            {{ form.data_aquisicao }}
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">{{ form.observacoes.label }}</label>
+                            {{ form.observacoes }}
+                        </div>
+                    </div>
+
+                    <div class="text-end border-top pt-3">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Salvar Impressora
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

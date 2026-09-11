@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Produção #{{ producao.pk }} - FL3D Manager{% endblock %}
+{% block page_title %}Produção #{{ producao.pk }} — {{ producao.produto.nome }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'producao:lista' %}" class="btn btn-secondary me-2">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+<a href="{% url 'producao:editar' producao.pk %}" class="btn btn-primary me-2">
+    <i class="bi bi-pencil"></i> Editar
+</a>
+<a href="{% url 'producao:registrar_impressao' producao.pk %}" class="btn btn-success">
+    <i class="bi bi-printer"></i> Registrar Impressão
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Painel Esquerdo: Dados da Produção -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-info-circle me-2"></i>Dados da Produção</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Status</span>
+                        <span>
+                            {% if producao.status == 'aguardando' %}<span class="badge bg-secondary">{{ producao.get_status_display }}</span>
+                            {% elif producao.status == 'imprimindo' %}<span class="badge bg-primary">{{ producao.get_status_display }}</span>
+                            {% elif producao.status == 'concluido' %}<span class="badge bg-success">{{ producao.get_status_display }}</span>
+                            {% elif producao.status == 'falhou' %}<span class="badge bg-danger">{{ producao.get_status_display }}</span>
+                            {% else %}<span class="badge bg-dark">{{ producao.get_status_display }}</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Pedido</span>
+                        <a href="{% url 'pedidos:detalhe' producao.pedido.pk %}" class="fw-bold text-decoration-none">#{{ producao.pedido.numero }}</a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Produto</span>
+                        <span class="fw-bold">{{ producao.produto.nome }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Quantidade</span>
+                        <span class="fw-bold">{{ producao.quantidade }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Impressora</span>
+                        <span class="fw-bold">{{ producao.impressora.nome|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Filamento</span>
+                        <span class="fw-bold">{{ producao.filamento|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Peso Previsto</span>
+                        <span class="fw-bold">{{ producao.peso_previsto|default:"-" }}g</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Tempo Previsto</span>
+                        <span class="fw-bold">{{ producao.tempo_previsto|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Início</span>
+                        <span class="fw-bold">{{ producao.data_inicio|date:"d/m/Y H:i"|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Conclusão</span>
+                        <span class="fw-bold">{{ producao.data_conclusao|date:"d/m/Y H:i"|default:"-" }}</span>
+                    </li>
+                </ul>
+                {% if producao.observacoes %}
+                <div class="mt-3 p-2 bg-light rounded">
+                    <small class="text-muted">Observações:</small>
+                    <p class="mb-0 mt-1">{{ producao.observacoes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel Direito: Histórico de Impressões -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 text-primary"><i class="bi bi-printer me-2"></i>Histórico de Impressões</h6>
+                <a href="{% url 'producao:registrar_impressao' producao.pk %}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus"></i> Registrar Impressão
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Data</th>
+                                <th>Filamento</th>
+                                <th>Peso (g)</th>
+                                <th>Tempo</th>
+                                <th>Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for imp in impressoes %}
+                            <tr>
+                                <td class="ps-3">{{ imp.data|date:"d/m/Y H:i" }}</td>
+                                <td>{{ imp.filamento.material }} {{ imp.filamento.cor }}</td>
+                                <td>{{ imp.peso_utilizado }}g</td>
+                                <td>{{ imp.tempo_impressao }}</td>
+                                <td>
+                                    {% if imp.resultado == 'sucesso' %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Sucesso</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Falha</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Nenhuma impressão registrada ainda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

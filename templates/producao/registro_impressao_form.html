@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Impressão - FL3D Manager{% endblock %}
+{% block page_title %}Registrar Impressão{% endblock %}
+
+{% block page_actions %}
+{% if producao %}
+<a href="{% url 'producao:detalhe' producao.pk %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar para Produção
+</a>
+{% else %}
+<a href="{% url 'producao:lista' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        {% if producao %}
+        <div class="alert alert-info mb-4">
+            <strong>Produção #{{ producao.pk }}</strong> — {{ producao.produto.nome }} (Pedido #{{ producao.pedido.numero }})
+        </div>
+        {% endif %}
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-printer me-2"></i>Dados da Impressão</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.producao.label }}</label>
+                            {{ form.producao }}
+                            <div class="text-danger small">{{ form.producao.errors }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.pedido.label }}</label>
+                            {{ form.pedido }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.produto.label }}</label>
+                            {{ form.produto }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.impressora.label }}</label>
+                            {{ form.impressora }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.filamento.label }} *</label>
+                            {{ form.filamento }}
+                            <div class="text-danger small">{{ form.filamento.errors }}</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.peso_utilizado.label }} *</label>
+                            <div class="input-group">
+                                {{ form.peso_utilizado }}
+                                <span class="input-group-text">g</span>
+                            </div>
+                            <div class="text-danger small">{{ form.peso_utilizado.errors }}</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.tempo_impressao.label }} *</label>
+                            {{ form.tempo_impressao }}
+                            <small class="text-muted d-block">Formato: HH:MM:SS</small>
+                            <div class="text-danger small">{{ form.tempo_impressao.errors }}</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.resultado.label }} *</label>
+                        <div class="d-flex gap-3 mt-2">
+                            {% for radio in form.resultado %}
+                            <div class="form-check form-check-inline p-0">
+                                <label class="btn {% if radio.data.value == 'sucesso' %}btn-outline-success{% else %}btn-outline-danger{% endif %} w-100">
+                                    {{ radio.tag }}
+                                    {% if radio.data.value == 'sucesso' %}
+                                        <i class="bi bi-check-circle me-1"></i> Sucesso
+                                    {% else %}
+                                        <i class="bi bi-x-circle me-1"></i> Falha
+                                    {% endif %}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-danger small">{{ form.resultado.errors }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.observacoes.label }}</label>
+                        {{ form.observacoes }}
+                    </div>
+
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Atenção:</strong> Ao registrar a impressão, o estoque do filamento será atualizado automaticamente.
+                        Em caso de <strong>Falha</strong>, uma perda será criada automaticamente.
+                    </div>
+
+                    <div class="text-end border-top pt-3 mt-3">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Registrar Impressão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

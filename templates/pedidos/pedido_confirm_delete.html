@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancelar Pedido - FL3D Manager{% endblock %}
+{% block page_title %}Cancelar Pedido{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Atenção</h5>
+            </div>
+            <div class="card-body text-center py-4">
+                <i class="bi bi-x-circle text-danger display-1 mb-3"></i>
+                <h4>Cancelar Pedido?</h4>
+                <p class="lead">Deseja cancelar o pedido <strong>#{{ pedido.numero }}</strong> de <strong>{{ pedido.cliente.nome }}</strong>?</p>
+                <p class="text-muted small">Nota: O pedido não será apagado. Seu status será alterado para "Cancelado" e o histórico será preservado.</p>
+                <form method="POST" class="mt-4">
+                    {% csrf_token %}
+                    <a href="{% url 'pedidos:lista' %}" class="btn btn-secondary me-2">Voltar</a>
+                    <button type="submit" class="btn btn-danger">Sim, cancelar pedido</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

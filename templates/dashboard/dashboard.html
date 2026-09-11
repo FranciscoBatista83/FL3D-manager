@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Principal - FL3D Manager{% endblock %}
+{% block page_title %}Visão Geral{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ================================================================
+       CARDS DE KPI — inspirados no tema roxo/magenta/amarelo
+       ================================================================ */
+    .kpi-card {
+        border-radius: 16px;
+        border: none;
+        padding: 1.4rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+        box-shadow: 0 4px 18px rgba(45, 27, 105, 0.13);
+        transition: transform 0.18s, box-shadow 0.18s;
+        background: #fff;
+    }
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(45, 27, 105, 0.18);
+    }
+    .kpi-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+    .kpi-icon.yellow   { background: rgba(245,166,35,0.14);  color: #F5A623; }
+    .kpi-icon.purple   { background: rgba(123,45,139,0.14);  color: #7B2D8B; }
+    .kpi-icon.green    { background: rgba(76,175,80,0.14);   color: #4CAF50; }
+    .kpi-icon.pink     { background: rgba(233,30,140,0.14);  color: #E91E8C; }
+
+    .kpi-label  { font-size: 0.78rem; color: #888; font-weight: 500; margin-bottom: 2px; }
+    .kpi-value  { font-size: 1.65rem; font-weight: 700; color: #1F0938; line-height: 1; }
+    .kpi-value.green  { color: #4CAF50; }
+    .kpi-value.pink   { color: #E91E8C; }
+
+    /* ================================================================
+       BOTÕES DE AÇÃO RÁPIDA
+       ================================================================ */
+    .btn-acao {
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        padding: 9px 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.15s, box-shadow 0.15s;
+        border: none;
+    }
+    .btn-acao:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+    .btn-acao.yellow { background: #F5A623; color: #fff; }
+    .btn-acao.purple { background: linear-gradient(135deg, #2D1B69, #7B2D8B); color: #fff; }
+    .btn-acao.pink   { background: #E91E8C; color: #fff; }
+
+    /* ================================================================
+       SEÇÃO DE TABELA E LISTAS
+       ================================================================ */
+    .section-card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 4px 18px rgba(45, 27, 105, 0.10);
+        background: #fff;
+        overflow: hidden;
+    }
+    .section-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid rgba(45, 27, 105, 0.08);
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .section-card .card-header h6 {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-card .card-header h6.purple { color: #2D1B69; }
+    .section-card .card-header h6.pink   { color: #E91E8C; }
+    .section-card .card-header h6.red    { color: #dc3545; }
+
+    .table th {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #999;
+        font-weight: 600;
+        background: #FAFAFA;
+    }
+    .table td { font-size: 0.88rem; vertical-align: middle; }
+
+    /* Badges de status */
+    .badge-status {
+        font-size: 0.72rem;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    /* Lista de produção e estoque */
+    .list-group-item { border-color: rgba(45, 27, 105, 0.07); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ================================================================
+     KPIs — Indicadores do mês
+     ================================================================ -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-icon yellow"><i class="bi bi-cart-check-fill"></i></div>
+            <div>
+                <div class="kpi-label">Pedidos do Mês</div>
+                <div class="kpi-value">{{ pedidos_mes }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-icon green"><i class="bi bi-cash-stack"></i></div>
+            <div>
+                <div class="kpi-label">Receita do Mês</div>
+                <div class="kpi-value green">R$ {{ receita_mes|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-icon purple"><i class="bi bi-gear-fill"></i></div>
+            <div>
+                <div class="kpi-label">Em Produção</div>
+                <div class="kpi-value">{{ em_producao }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-icon pink"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div>
+                <div class="kpi-label">Estoque Baixo</div>
+                <div class="kpi-value {% if estoque_baixo_count > 0 %}pink{% endif %}">
+                    {{ estoque_baixo_count }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================
+     AÇÕES RÁPIDAS
+     ================================================================ -->
+<div class="mb-4 d-flex flex-wrap gap-2">
+    <a href="{% url 'pedidos:novo' %}" class="btn-acao yellow">
+        <i class="bi bi-cart-plus"></i> Novo Pedido
+    </a>
+    <a href="{% url 'producao:nova' %}" class="btn-acao purple">
+        <i class="bi bi-gear"></i> Iniciar Produção
+    </a>
+    <a href="{% url 'financeiro:novo' %}" class="btn-acao pink">
+        <i class="bi bi-cash"></i> Lançamento Financeiro
+    </a>
+</div>
+
+<!-- ================================================================
+     TABELA + SIDEBAR DIREITA
+     ================================================================ -->
+<div class="row g-3">
+
+    <!-- Pedidos Recentes -->
+    <div class="col-md-8">
+        <div class="section-card">
+            <div class="card-header">
+                <h6 class="purple"><i class="bi bi-cart3"></i> Pedidos Recentes</h6>
+                <a href="{% url 'pedidos:lista' %}" class="btn btn-sm"
+                   style="background:linear-gradient(135deg,#2D1B69,#A0155A);color:#fff;border-radius:8px;font-size:0.78rem;">
+                    Ver Todos
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Pedido</th>
+                            <th>Cliente</th>
+                            <th>Data</th>
+                            <th>Status</th>
+                            <th class="text-end pe-3">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pedidos_recentes %}
+                        <tr>
+                            <td class="ps-3">
+                                <a href="{% url 'pedidos:detalhe' p.pk %}"
+                                   class="fw-bold text-decoration-none" style="color:#2D1B69;">#{{ p.numero }}</a>
+                            </td>
+                            <td>{{ p.cliente.nome }}</td>
+                            <td>{{ p.data_pedido|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if p.status == 'orcamento' %}
+                                    <span class="badge-status" style="background:#EDE7F6;color:#5E35B1;">{{ p.get_status_display }}</span>
+                                {% elif p.status == 'aprovado' %}
+                                    <span class="badge-status" style="background:#E3F2FD;color:#1565C0;">{{ p.get_status_display }}</span>
+                                {% elif p.status == 'producao' %}
+                                    <span class="badge-status" style="background:#FFF8E1;color:#F57F17;">{{ p.get_status_display }}</span>
+                                {% elif p.status == 'concluido' %}
+                                    <span class="badge-status" style="background:#E8F5E9;color:#2E7D32;">{{ p.get_status_display }}</span>
+                                {% elif p.status == 'entregue' %}
+                                    <span class="badge-status" style="background:#F3E5F5;color:#6A1B9A;">{{ p.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge-status" style="background:#FFEBEE;color:#C62828;">{{ p.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-3 fw-bold">R$ {{ p.valor_total|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted" style="font-size:0.88rem;">
+                                <i class="bi bi-inbox me-1"></i> Nenhum pedido recente.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Direita -->
+    <div class="col-md-4 d-flex flex-column gap-3">
+
+        <!-- Produção em Andamento -->
+        <div class="section-card">
+            <div class="card-header">
+                <h6 class="pink"><i class="bi bi-gear-fill"></i> Produção em Andamento</h6>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for p in producao_andamento %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold" style="font-size:0.88rem;">
+                                <a href="{% url 'producao:detalhe' p.pk %}"
+                                   class="text-decoration-none" style="color:#2D1B69;">{{ p.produto.nome }}</a>
+                            </div>
+                            <small class="text-muted">Ped. #{{ p.pedido.numero }}</small>
+                        </div>
+                        {% if p.impressora %}
+                        <span class="badge rounded-pill"
+                              style="background:linear-gradient(135deg,#2D1B69,#A0155A);font-size:0.7rem;">
+                            <i class="bi bi-printer me-1"></i>{{ p.impressora.nome }}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary rounded-pill" style="font-size:0.7rem;">Sem imp.</span>
+                        {% endif %}
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center text-muted py-3" style="font-size:0.85rem;">
+                    <i class="bi bi-check-circle text-success me-1"></i> Nenhuma produção em andamento.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Estoque Baixo -->
+        <div class="section-card">
+            <div class="card-header">
+                <h6 class="red"><i class="bi bi-exclamation-triangle-fill"></i> Estoque Baixo (&lt; 20%)</h6>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for f in estoque_baixo %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold" style="font-size:0.88rem;">
+                            <a href="{% url 'estoque:detalhe' f.pk %}"
+                               class="text-decoration-none text-danger">{{ f.material }} {{ f.cor }}</a>
+                        </div>
+                        <small class="text-muted">{{ f.marca }}</small>
+                    </div>
+                    <span class="fw-bold text-danger">{{ f.peso_atual }}g</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center text-muted py-3" style="font-size:0.85rem;">
+                    <i class="bi bi-check-circle text-success me-1"></i> Estoque normalizado.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

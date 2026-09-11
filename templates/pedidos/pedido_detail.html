@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Pedido #{{ pedido.numero }} - FL3D Manager{% endblock %}
+{% block page_title %}Pedido #{{ pedido.numero }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'pedidos:lista' %}" class="btn btn-secondary me-2">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+<a href="{% url 'pedidos:editar' pedido.pk %}" class="btn btn-primary me-2">
+    <i class="bi bi-pencil"></i> Editar
+</a>
+<a href="{% url 'pedidos:cancelar' pedido.pk %}" class="btn btn-outline-danger">
+    <i class="bi bi-x-circle"></i> Cancelar Pedido
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Resumo do Pedido -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-receipt me-2"></i>Informações do Pedido</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Status</span>
+                        <span>
+                            {% if pedido.status == 'novo' %}<span class="badge bg-secondary fs-6">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'aprovado' %}<span class="badge bg-primary fs-6">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'em_producao' %}<span class="badge bg-warning text-dark fs-6">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'pronto' or pedido.status == 'entregue' %}<span class="badge bg-success fs-6">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'cancelado' %}<span class="badge bg-danger fs-6">{{ pedido.get_status_display }}</span>
+                            {% else %}<span class="badge bg-info text-dark fs-6">{{ pedido.get_status_display }}</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Data do Pedido</span>
+                        <span class="fw-bold">{{ pedido.data_pedido|date:"d/m/Y H:i" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Entrega Prevista</span>
+                        <span class="fw-bold">{{ pedido.data_entrega_prevista|date:"d/m/Y"|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Forma de Pag.</span>
+                        <span class="fw-bold">{{ pedido.get_forma_pagamento_display|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Status do Pag.</span>
+                        <span class="fw-bold">{{ pedido.get_status_pagamento_display }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-person me-2"></i>Cliente</h6>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ pedido.cliente.nome }}</h5>
+                {% if pedido.cliente.whatsapp %}
+                    <p class="card-text">
+                        <i class="bi bi-whatsapp text-success me-1"></i>
+                        <a href="https://wa.me/55{{ pedido.cliente.whatsapp|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" class="text-decoration-none">{{ pedido.cliente.whatsapp }}</a>
+                    </p>
+                {% endif %}
+                {% if pedido.cliente.email %}
+                    <p class="card-text"><i class="bi bi-envelope me-1"></i>{{ pedido.cliente.email }}</p>
+                {% endif %}
+                <a href="{% url 'clientes:detalhe' pedido.cliente.pk %}" class="btn btn-sm btn-outline-primary mt-1">
+                    Ver Perfil Completo
+                </a>
+            </div>
+        </div>
+
+        <!-- Resumo Financeiro -->
+        <div class="card shadow-sm border-success">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-success"><i class="bi bi-calculator me-2"></i>Resumo Financeiro</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal dos Produtos:</span>
+                    <span class="fw-bold">R$ {{ pedido.valor_produtos|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Desconto:</span>
+                    <span class="fw-bold text-danger">- R$ {{ pedido.desconto|floatformat:2 }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fs-5 fw-bold">TOTAL:</span>
+                    <span class="fs-4 fw-bold text-success">R$ {{ pedido.valor_final|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itens do Pedido -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-list-ul me-2"></i>Itens do Pedido</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Produto</th>
+                                <th class="text-center">Qtd</th>
+                                <th class="text-end">Preço Unit.</th>
+                                <th class="text-end pe-3">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in itens %}
+                            <tr>
+                                <td class="ps-3">{{ item.produto.nome }}</td>
+                                <td class="text-center">{{ item.quantidade }}</td>
+                                <td class="text-end">R$ {{ item.valor_unitario|floatformat:2 }}</td>
+                                <td class="text-end pe-3 fw-bold">R$ {{ item.valor_total|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">Nenhum item neste pedido.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if pedido.observacoes %}
+        <div class="card shadow-sm mt-3">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-chat-text me-2"></i>Observações</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ pedido.observacoes|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - FL3D Manager{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <h4 class="alert-heading">Bem-vindo ao FL3D Manager!</h4>
+            <p>Este é o dashboard inicial do sistema. Em breve você verá aqui um painel de controle completo mostrando faturamento, pedidos em aberto, consumo de filamento, etc.</p>
+            <hr>
+            <p class="mb-0">A Fase 1 foi concluída e o sistema está rodando.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Faturamento -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white shadow">
+            <div class="card-body">
+                <h5 class="card-title">Faturamento Mês</h5>
+                <h3 class="card-text">R$ 0,00</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pedidos -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white shadow">
+            <div class="card-body">
+                <h5 class="card-title">Pedidos em Aberto</h5>
+                <h3 class="card-text">0</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Produção -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-dark shadow">
+            <div class="card-body">
+                <h5 class="card-title">Em Produção</h5>
+                <h3 class="card-text">0</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Impressoras -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white shadow">
+            <div class="card-body">
+                <h5 class="card-title">Impressoras Ativas</h5>
+                <h3 class="card-text">0 / 0</h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

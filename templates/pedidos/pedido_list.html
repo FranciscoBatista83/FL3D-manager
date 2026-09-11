@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Pedidos - FL3D Manager{% endblock %}
+{% block page_title %}Pedidos{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'pedidos:novo' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Novo Pedido
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filtros -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body py-2">
+        <form class="row g-2 align-items-center" method="GET">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="q" placeholder="Buscar por nº do pedido ou cliente..." value="{{ request.GET.q }}">
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todos os Status</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filtro == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if request.GET.q or request.GET.status %}
+            <div class="col-md-2">
+                <a href="{% url 'pedidos:lista' %}" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-x-circle"></i> Limpar
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Pedido</th>
+                        <th>Cliente</th>
+                        <th>Data</th>
+                        <th>Entrega</th>
+                        <th>Status</th>
+                        <th>Valor</th>
+                        <th class="text-end pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="{% url 'pedidos:detalhe' pedido.pk %}" class="fw-bold text-decoration-none">
+                                #{{ pedido.numero }}
+                            </a>
+                        </td>
+                        <td>{{ pedido.cliente.nome }}</td>
+                        <td>{{ pedido.data_pedido|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if pedido.data_entrega_prevista %}
+                                {{ pedido.data_entrega_prevista|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pedido.status == 'novo' %}<span class="badge bg-secondary">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'orcamento' %}<span class="badge bg-info text-dark">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'aguardando_aprovacao' %}<span class="badge bg-warning text-dark">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'aprovado' %}<span class="badge bg-primary">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'aguardando_producao' %}<span class="badge bg-info">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'em_producao' %}<span class="badge bg-primary">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'pronto' %}<span class="badge bg-success">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'entregue' %}<span class="badge bg-success">{{ pedido.get_status_display }}</span>
+                            {% elif pedido.status == 'cancelado' %}<span class="badge bg-danger">{{ pedido.get_status_display }}</span>
+                            {% else %}<span class="badge bg-secondary">{{ pedido.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-success">R$ {{ pedido.valor_final|floatformat:2 }}</td>
+                        <td class="text-end pe-3">
+                            <a href="{% url 'pedidos:editar' pedido.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'pedidos:cancelar' pedido.pk %}" class="btn btn-sm btn-outline-danger" title="Cancelar">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-cart-x display-4 d-block mb-2 text-black-50"></i>
+                            Nenhum pedido encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Navegação">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Anterior</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+        {% endif %}
+        <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Próxima</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Estoque de Filamentos - FL3D Manager{% endblock %}
+{% block page_title %}Estoque de Filamentos{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'estoque:novo' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Novo Filamento
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form class="row g-2 align-items-center" method="GET">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="q" placeholder="Buscar por marca, material ou cor..." value="{{ request.GET.q }}">
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </div>
+            {% if request.GET.q %}
+            <div class="col-auto">
+                <a href="{% url 'estoque:lista' %}" class="btn btn-outline-danger"><i class="bi bi-x-circle"></i> Limpar</a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Filamento</th>
+                        <th>Fornecedor / Lote</th>
+                        <th style="min-width: 200px">Estoque</th>
+                        <th>Custo</th>
+                        <th class="text-end pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in filamentos %}
+                    {% with percentual=f.peso_atual|floatformat:0 %}
+                    {% if f.peso_inicial > 0 %}
+                        {% widthratio f.peso_atual f.peso_inicial 100 as pct %}
+                    {% else %}
+                        {% with pct=0 %}{% endwith %}
+                    {% endif %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="{% url 'estoque:detalhe' f.pk %}" class="text-decoration-none fw-bold">
+                                {{ f.material }} {{ f.cor }}
+                            </a>
+                            <div class="small text-muted">{{ f.marca }}</div>
+                        </td>
+                        <td>
+                            <div>{{ f.fornecedor|default:"-" }}</div>
+                            {% if f.codigo_lote %}<small class="text-muted">Lote: {{ f.codigo_lote }}</small>{% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="fw-bold {% if f.peso_atual < f.peso_inicial|floatformat:0|add:0 %}text-warning{% endif %}">
+                                    {{ f.peso_atual }}g
+                                </small>
+                                <small class="text-muted">de {{ f.peso_inicial }}g</small>
+                            </div>
+                            {% widthratio f.peso_atual f.peso_inicial 100 as pct_val %}
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar 
+                                    {% if pct_val|add:0 > 50 %}bg-success
+                                    {% elif pct_val|add:0 > 20 %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                    role="progressbar"
+                                    style="width: {{ pct_val }}%"
+                                    aria-valuenow="{{ pct_val }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100">
+                                </div>
+                            </div>
+                            {% if pct_val|add:0 <= 20 %}
+                                <small class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Estoque baixo</small>
+                            {% endif %}
+                        </td>
+                        <td>R$ {{ f.custo_rolo|floatformat:2 }}</td>
+                        <td class="text-end pe-3">
+                            <a href="{% url 'estoque:detalhe' f.pk %}" class="btn btn-sm btn-outline-secondary" title="Histórico">
+                                <i class="bi bi-clock-history"></i>
+                            </a>
+                            <a href="{% url 'estoque:ajuste' f.pk %}" class="btn btn-sm btn-outline-warning" title="Ajustar Estoque">
+                                <i class="bi bi-sliders"></i>
+                            </a>
+                            <a href="{% url 'estoque:editar' f.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-layers display-4 d-block mb-2 text-black-50"></i>
+                            Nenhum filamento cadastrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-3">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>{% else %}<li class="page-item disabled"><span class="page-link">Anterior</span></li>{% endif %}
+        <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a></li>{% else %}<li class="page-item disabled"><span class="page-link">Próxima</span></li>{% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

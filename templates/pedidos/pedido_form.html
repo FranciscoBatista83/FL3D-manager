@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} - FL3D Manager{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'pedidos:lista' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<form method="POST" id="form-pedido">
+    {% csrf_token %}
+
+    <div class="row">
+        <!-- Coluna Esquerda: Dados do Pedido -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 text-primary"><i class="bi bi-info-circle me-2"></i>Dados do Pedido</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.cliente.id_for_label }}" class="form-label fw-bold">{{ form.cliente.label }} *</label>
+                        {{ form.cliente }}
+                        <div class="text-danger small">{{ form.cliente.errors }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.data_entrega_prevista.id_for_label }}" class="form-label">{{ form.data_entrega_prevista.label }}</label>
+                        {{ form.data_entrega_prevista }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                        {{ form.status }}
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label for="{{ form.forma_pagamento.id_for_label }}" class="form-label">{{ form.forma_pagamento.label }}</label>
+                        {{ form.forma_pagamento }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.status_pagamento.id_for_label }}" class="form-label">{{ form.status_pagamento.label }}</label>
+                        {{ form.status_pagamento }}
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label for="{{ form.desconto.id_for_label }}" class="form-label">{{ form.desconto.label }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            {{ form.desconto }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">{{ form.observacoes.label }}</label>
+                        {{ form.observacoes }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo do Pedido -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 text-primary"><i class="bi bi-calculator me-2"></i>Resumo</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal:</span>
+                        <span id="resumo-subtotal" class="fw-bold">R$ 0,00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Desconto:</span>
+                        <span id="resumo-desconto" class="fw-bold text-danger">- R$ 0,00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fs-5 fw-bold">Total:</span>
+                        <span id="resumo-total" class="fs-5 fw-bold text-success">R$ 0,00</span>
+                    </div>
+                    <div class="d-grid mt-3">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Salvar Pedido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Itens do Pedido -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 text-primary"><i class="bi bi-list-ul me-2"></i>Itens do Pedido</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-item">
+                        <i class="bi bi-plus-lg"></i> Adicionar Item
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Dados ocultos do formset -->
+                    {{ formset.management_form }}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="tabela-itens">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Produto</th>
+                                    <th style="width: 90px">Qtd</th>
+                                    <th style="width: 130px">Preço Unit.</th>
+                                    <th style="width: 130px">Total</th>
+                                    <th style="width: 50px"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="formset-container">
+                                {% for form_item in formset %}
+                                <tr class="item-row">
+                                    {% for hidden in form_item.hidden_fields %}{{ hidden }}{% endfor %}
+                                    <td>{{ form_item.produto }}</td>
+                                    <td>{{ form_item.quantidade }}</td>
+                                    <td>{{ form_item.valor_unitario }}</td>
+                                    <td>{{ form_item.valor_total }}</td>
+                                    <td class="text-center">
+                                        {% if form_item.instance.pk %}
+                                            <div class="d-none">{{ form_item.DELETE }}</div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item" title="Remover">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item" title="Remover">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Template oculto para novas linhas (clonado via JS) -->
+                    <template id="empty-form-template">
+                        <tr class="item-row">
+                            <td>
+                                <select name="itens-__prefix__-produto" class="form-select produto-select">
+                                    <option value="">---------</option>
+                                    {% for produto in produtos_json %}
+                                    <option value="{{ produto.id }}" data-preco="{{ produto.preco_venda }}">{{ produto.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" name="itens-__prefix__-id" value="">
+                            </td>
+                            <td><input type="number" name="itens-__prefix__-quantidade" value="1" min="1" class="form-control qtd-input"></td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" name="itens-__prefix__-valor_unitario" class="form-control preco-input" value="0.00">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" name="itens-__prefix__-valor_total" class="form-control total-input" readonly value="0.00">
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dados dos produtos para preencher preços automaticamente
+const produtosData = {{ produtos_json|safe }};
+const produtosMap = {};
+produtosData.forEach(p => { produtosMap[p.id] = p; });
+
+// Formata numero como moeda BR
+function fmt(val) {
+    return parseFloat(val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+// Calcula linha e atualiza total geral
+function calcularLinha(row) {
+    const qtd = parseFloat(row.querySelector('.qtd-input').value) || 0;
+    const preco = parseFloat(row.querySelector('.preco-input').value.replace(',', '.')) || 0;
+    const total = qtd * preco;
+    row.querySelector('.total-input').value = total.toFixed(2);
+    return total;
+}
+
+function calcularTotais() {
+    let subtotal = 0;
+    document.querySelectorAll('.item-row').forEach(row => {
+        if (row.style.display !== 'none') {
+            subtotal += calcularLinha(row);
+        }
+    });
+
+    const descontoInput = document.querySelector('[name$="-desconto"]') || document.getElementById('id_desconto');
+    const desconto = parseFloat(descontoInput ? descontoInput.value : 0) || 0;
+    const total = subtotal - desconto;
+
+    document.getElementById('resumo-subtotal').textContent = 'R$ ' + fmt(subtotal);
+    document.getElementById('resumo-desconto').textContent = '- R$ ' + fmt(desconto);
+    document.getElementById('resumo-total').textContent = 'R$ ' + fmt(total);
+}
+
+// Quando seleciona produto, preenche o preço automaticamente
+function bindProdutoSelect(row) {
+    const sel = row.querySelector('.produto-select');
+    if (!sel) return;
+    sel.addEventListener('change', function() {
+        const produto = produtosMap[this.value];
+        if (produto) {
+            row.querySelector('.preco-input').value = parseFloat(produto.preco_venda).toFixed(2);
+        }
+        calcularTotais();
+    });
+}
+
+function bindInputs(row) {
+    row.querySelectorAll('.qtd-input, .preco-input').forEach(el => {
+        el.addEventListener('input', calcularTotais);
+    });
+    bindProdutoSelect(row);
+}
+
+// Botão Adicionar Item
+document.getElementById('btn-add-item').addEventListener('click', function() {
+    const container = document.getElementById('formset-container');
+    const template = document.getElementById('empty-form-template');
+    const totalForms = document.getElementById('id_itens-TOTAL_FORMS');
+    const idx = parseInt(totalForms.value);
+
+    const novaLinha = template.content.cloneNode(true).querySelector('tr');
+    novaLinha.innerHTML = novaLinha.innerHTML.replaceAll('__prefix__', idx);
+
+    container.appendChild(novaLinha);
+    totalForms.value = idx + 1;
+
+    bindInputs(novaLinha);
+});
+
+// Botão Remover Item (delegação de eventos)
+document.getElementById('formset-container').addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-remove-item');
+    if (!btn) return;
+    const row = btn.closest('tr');
+    // Se tem checkbox de DELETE (item já salvo no banco), marcar e esconder
+    const delChk = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (delChk) {
+        delChk.checked = true;
+        row.style.display = 'none';
+    } else {
+        row.remove();
+    }
+    calcularTotais();
+});
+
+// Desconto muda → recalcular
+const descontoEl = document.getElementById('id_desconto');
+if (descontoEl) descontoEl.addEventListener('input', calcularTotais);
+
+// Inicializar listeners nas linhas existentes
+document.querySelectorAll('.item-row').forEach(bindInputs);
+
+// Calcular na carga da página (edição)
+calcularTotais();
+</script>
+{% endblock %}

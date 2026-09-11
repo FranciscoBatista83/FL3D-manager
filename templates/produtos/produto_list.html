@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Produtos - FL3D Manager{% endblock %}
+{% block page_title %}Produtos{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'produtos:novo' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Novo Produto
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Catálogo de Produtos</h6>
+        <form class="d-flex" method="GET" action="{% url 'produtos:lista' %}">
+            <input class="form-control me-2" type="search" placeholder="Buscar..." name="q" value="{{ request.GET.q }}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+        </form>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th width="80">Foto</th>
+                        <th>Produto</th>
+                        <th>Preço</th>
+                        <th>Tempo Estimado</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                    <tr>
+                        <td>
+                            {% if produto.foto %}
+                                <img src="{{ produto.foto.url }}" alt="{{ produto.nome }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light text-center d-flex align-items-center justify-content-center text-muted border rounded" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'produtos:detalhe' produto.pk %}" class="text-decoration-none fw-bold">
+                                {{ produto.nome }}
+                            </a>
+                            <div class="small text-muted">{{ produto.codigo|default:"Sem código" }} | Categoria: {{ produto.categoria.nome|default:"-" }}</div>
+                        </td>
+                        <td class="fw-bold text-success">
+                            R$ {{ produto.preco_venda }}
+                        </td>
+                        <td>
+                            {{ produto.tempo_estimado|default:"-" }}
+                        </td>
+                        <td>
+                            {% if produto.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'produtos:editar' produto.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'produtos:excluir' produto.pk %}" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            Nenhum produto encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if is_paginated %}
+        <nav aria-label="Navegação de página">
+            <ul class="pagination justify-content-center mt-4">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Anterior</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                {% endif %}
+                
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Próxima</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

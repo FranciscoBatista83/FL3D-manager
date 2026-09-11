@@ -1,0 +1,410 @@
+{# ============================================================================= #}
+{# FL3D Manager - Template Mestre da Aplicação (base.html)                       #}
+{# ============================================================================= #}
+{# VISÃO GERAL E CONCEITO:                                                       #}
+{# Este arquivo é a "estrutura básica" ou "esqueleto" de todas as telas.         #}
+{# Ele desenha:                                                                  #}
+{#   1. O cabeçalho superior (Navbar) com o nome FL3D Studio e botão de sair.    #}
+{#   2. O menu lateral escuro (Sidebar) com atalhos para todos os módulos.       #}
+{#   3. A área central (Main) onde o conteúdo de cada tela específica é injetado #}
+{#      através da tag {% block content %}.                                      #}
+{#   4. O sistema de alertas automáticos ({% for message in messages %}) para    #}
+{#      avisar quando algo foi salvo com sucesso ou com erro.                    #}
+{# ============================================================================= #}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {# Título da aba do navegador customizável por página #}
+    <title>{% block title %}FL3D Manager{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* =====================================================================
+           VARIÁVEIS DE CORES DO TEMA (inspirado na imagem de referência)
+           ===================================================================== */
+        :root {
+            --sidebar-from:    #2D1B69;   /* Roxo escuro — topo da sidebar       */
+            --sidebar-to:      #A0155A;   /* Magenta    — base da sidebar         */
+            --navbar-bg:       #1F0938;   /* Roxo muito escuro — barra de topo    */
+            --page-bg:         #F4F6F8;   /* Cinza clarinho — fundo das páginas   */
+            --card-bg:         #FFFFFF;   /* Branco puro — fundo dos cards        */
+            --text-sidebar:    #FFFFFF;   /* Texto branco na sidebar              */
+            --text-muted-side: rgba(255,255,255,0.55); /* Texto apagado sidebar  */
+            --accent-yellow:   #F5A623;   /* Amarelo/laranja — destaque           */
+            --accent-purple:   #7B2D8B;   /* Roxo médio — destaque secundário     */
+            --accent-green:    #4CAF50;   /* Verde — positivo / ativo             */
+            --accent-pink:     #E91E8C;   /* Rosa/magenta — destaque terciário    */
+            --shadow-card:     0 2px 12px rgba(45, 27, 105, 0.10); /* Sombra suave */
+        }
+
+        /* =====================================================================
+           BASE
+           ===================================================================== */
+        html, body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--page-bg);
+            overflow-x: hidden;
+            height: 100%;
+        }
+
+        /* =====================================================================
+           NAVBAR TOPO
+           ===================================================================== */
+        .navbar-fl3d {
+            background-color: var(--navbar-bg);
+            height: 56px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .navbar-fl3d .brand {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar-fl3d .brand i {
+            color: var(--accent-yellow);
+            font-size: 1.3rem;
+        }
+
+        .navbar-fl3d .nav-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .navbar-fl3d .nav-right span {
+            color: rgba(255,255,255,0.80);
+            font-size: 0.9rem;
+        }
+
+        .navbar-fl3d .btn-sair {
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.20);
+            color: #fff;
+            border-radius: 6px;
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .navbar-fl3d .btn-sair:hover {
+            background: rgba(255,255,255,0.22);
+        }
+
+        /* =====================================================================
+           SIDEBAR
+           ===================================================================== */
+        .sidebar {
+            position: fixed;
+            top: 56px;       /* logo abaixo da navbar */
+            bottom: 0;
+            left: 0;
+            width: 220px;
+            z-index: 100;
+            /* Gradiente roxo escuro → magenta, igual à imagem de referência */
+            background: linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-to) 100%);
+            box-shadow: 2px 0 12px rgba(0,0,0,0.18);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Avatar / cabeçalho da sidebar */
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .sidebar-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.18);
+            border: 2px solid rgba(255,255,255,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-username {
+            color: var(--text-sidebar);
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0.85;
+        }
+
+        /* Links de navegação */
+        .sidebar .nav-link {
+            color: var(--text-muted-side);
+            padding: 10px 20px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 0;
+            transition: background 0.18s, color 0.18s;
+        }
+
+        .sidebar .nav-link i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: var(--text-sidebar);
+            background: rgba(255,255,255,0.14);
+        }
+
+        .sidebar .nav-link.active {
+            border-left: 3px solid var(--accent-yellow);
+            padding-left: 17px;
+        }
+
+        /* Seção "Sistema" dentro da sidebar */
+        .sidebar-heading {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted-side);
+            padding: 1rem 20px 0.3rem;
+        }
+
+        /* =====================================================================
+           CONTEÚDO PRINCIPAL
+           ===================================================================== */
+        main {
+            margin-left: 220px;
+            margin-top: 56px;
+            padding: 1.75rem 2rem;
+            min-height: calc(100vh - 56px);
+            background-color: var(--page-bg);
+        }
+
+        /* Título de página */
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1F0938;
+            margin-bottom: 0;
+        }
+
+        .page-divider {
+            border-color: rgba(45, 27, 105, 0.12);
+            margin-bottom: 1.5rem;
+        }
+
+        /* =====================================================================
+           CARDS GLOBAIS
+           ===================================================================== */
+        .card {
+            border: none;
+            border-radius: 14px;
+            box-shadow: var(--shadow-card);
+            background: var(--card-bg);
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            border-radius: 14px 14px 0 0 !important;
+            background: var(--card-bg);
+        }
+
+        /* =====================================================================
+           BOTÕES GLOBAIS
+           ===================================================================== */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--sidebar-from), var(--accent-purple));
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3d2880, #9c3aaa);
+            border: none;
+        }
+
+        /* =====================================================================
+           ALERTAS DO DJANGO MESSAGES
+           ===================================================================== */
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+
+        /* =====================================================================
+           SCROLLBAR PERSONALIZADA (dentro do main)
+           ===================================================================== */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(45, 27, 105, 0.25); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(45, 27, 105, 0.5); }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- ================================================================
+         NAVBAR TOPO
+         ================================================================ -->
+    <header class="navbar-fl3d">
+        <a class="brand" href="{% url 'dashboard:index' %}">
+            <i class="bi bi-box-fill"></i> FL3D Manager
+        </a>
+        <div class="nav-right">
+            <span><i class="bi bi-person-circle me-1"></i>Olá, {{ user.username }}</span>
+            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn-sair">
+                    <i class="bi bi-box-arrow-right me-1"></i>Sair
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <!-- ================================================================
+         SIDEBAR LATERAL
+         ================================================================ -->
+    <nav class="sidebar">
+
+        <!-- Avatar do usuário logado -->
+        <div class="sidebar-header">
+            <div class="sidebar-avatar">
+                {{ user.username|slice:":2"|upper }}
+            </div>
+            <div class="sidebar-username">{{ user.username }}</div>
+        </div>
+
+        <!-- Itens de navegação -->
+        <ul class="nav flex-column mt-2">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}"
+                   href="{% url 'dashboard:index' %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'pedidos' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'pedidos:lista' %}">
+                    <i class="bi bi-cart3"></i> Pedidos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'clientes' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'clientes:lista' %}">
+                    <i class="bi bi-people"></i> Clientes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'produtos' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'produtos:lista' %}">
+                    <i class="bi bi-box-seam"></i> Produtos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'producao' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'producao:lista' %}">
+                    <i class="bi bi-gear-wide-connected"></i> Produção
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'estoque' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'estoque:lista' %}">
+                    <i class="bi bi-layers"></i> Estoque
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'impressoras' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'impressoras:lista' %}">
+                    <i class="bi bi-printer"></i> Impressoras
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'financeiro' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'financeiro:dashboard' %}">
+                    <i class="bi bi-cash-stack"></i> Financeiro
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-bar-chart-line"></i> Relatórios
+                </a>
+            </li>
+        </ul>
+
+        <!-- Seção sistema -->
+        <div class="sidebar-heading">Sistema</div>
+        <ul class="nav flex-column mb-3">
+            <li class="nav-item">
+                <a class="nav-link {% if 'usuarios' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'usuarios:lista' %}">
+                    <i class="bi bi-people-fill"></i> Usuários
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-sliders"></i> Configurações
+                </a>
+            </li>
+        </ul>
+
+    </nav>
+
+    <!-- ================================================================
+         CONTEÚDO PRINCIPAL
+         ================================================================ -->
+    <main>
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom page-divider">
+            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                {% block page_actions %}{% endblock %}
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

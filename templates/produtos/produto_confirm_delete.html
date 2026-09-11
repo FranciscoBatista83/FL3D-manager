@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Produto - FL3D Manager{% endblock %}
+{% block page_title %}Excluir Produto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Atenção</h5>
+            </div>
+            <div class="card-body text-center py-4">
+                <i class="bi bi-box-x text-danger display-1 mb-3"></i>
+                <h4>Você tem certeza?</h4>
+                <p class="lead">Deseja realmente inativar o produto <strong>{{ produto.nome }}</strong>?</p>
+                <p class="text-muted small">Nota: Por segurança e para manter o histórico de vendas, o produto será apenas ocultado (inativado) do sistema em vez de ser apagado definitivamente.</p>
+                
+                <form method="POST" class="mt-4">
+                    {% csrf_token %}
+                    <a href="{% url 'produtos:lista' %}" class="btn btn-secondary me-2">Cancelar e Voltar</a>
+                    <button type="submit" class="btn btn-danger">Sim, inativar produto</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

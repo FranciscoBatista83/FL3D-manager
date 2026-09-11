@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Cliente - FL3D Manager{% endblock %}
+{% block page_title %}{{ cliente.nome }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'clientes:lista' %}" class="btn btn-secondary me-2">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+<a href="{% url 'clientes:editar' cliente.pk %}" class="btn btn-primary me-2">
+    <i class="bi bi-pencil"></i> Editar
+</a>
+<a href="{% url 'clientes:excluir' cliente.pk %}" class="btn btn-danger">
+    <i class="bi bi-trash"></i> Excluir
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Dados do Cliente -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-person me-2"></i>Informações do Cliente</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="small text-muted">Status</div>
+                    {% if cliente.ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inativo</span>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">CPF/CNPJ</div>
+                    <div class="fw-bold">{{ cliente.cpf_cnpj|default:"Não informado" }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">WhatsApp / Telefone</div>
+                    <div class="fw-bold">
+                        {% if cliente.whatsapp %}
+                            <a href="https://wa.me/55{{ cliente.whatsapp|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" class="text-decoration-none text-success">
+                                <i class="bi bi-whatsapp"></i> {{ cliente.whatsapp }}
+                            </a>
+                        {% else %}
+                            {{ cliente.telefone|default:"Não informado" }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">E-mail</div>
+                    <div class="fw-bold">
+                        {% if cliente.email %}
+                            <a href="mailto:{{ cliente.email }}" class="text-decoration-none">{{ cliente.email }}</a>
+                        {% else %}
+                            Não informado
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">Endereço</div>
+                    <div class="fw-bold">
+                        {{ cliente.endereco|default:"Não informado" }}
+                        {% if cliente.numero %}, {{ cliente.numero }}{% endif %}
+                        {% if cliente.complemento %} ({{ cliente.complemento }}){% endif %}
+                        <br>
+                        {% if cliente.bairro %}{{ cliente.bairro }} - {% endif %}
+                        {% if cliente.cidade %}{{ cliente.cidade }}/{% endif %}{{ cliente.estado }}
+                        <br>
+                        CEP: {{ cliente.cep|default:"-" }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">Cadastrado em</div>
+                    <div class="fw-bold">{{ cliente.data_cadastro|date:"d/m/Y H:i" }}</div>
+                </div>
+                {% if cliente.observacoes %}
+                <div class="mb-3">
+                    <div class="small text-muted">Observações</div>
+                    <div class="p-2 bg-light border rounded mt-1">{{ cliente.observacoes|linebreaks }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Pedidos -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-cart me-2"></i>Histórico de Pedidos</h6>
+                <!-- Botão de Novo Pedido (Futuro) -->
+                <button class="btn btn-sm btn-outline-success" disabled title="Será habilitado na fase de Pedidos">
+                    <i class="bi bi-plus"></i> Novo Pedido para este cliente
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Nº</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos %}
+                            <tr>
+                                <td class="ps-3 fw-bold">#{{ pedido.numero }}</td>
+                                <td>{{ pedido.data_pedido|date:"d/m/Y" }}</td>
+                                <td><span class="badge bg-info">{{ pedido.get_status_display }}</span></td>
+                                <td class="fw-bold text-success">R$ {{ pedido.valor_final }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-cart-x display-4 d-block mb-2 text-black-50"></i>
+                                    Este cliente ainda não possui nenhum pedido.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

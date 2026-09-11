@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Editar Cliente{% else %}Novo Cliente{% endif %} - FL3D Manager{% endblock %}
+{% block page_title %}{% if object %}Editar Cliente: {{ object.nome }}{% else %}Novo Cliente{% endif %}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'clientes:lista' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <h5 class="mb-3 text-primary border-bottom pb-2">Dados Pessoais</h5>
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.nome.id_for_label }}" class="form-label">{{ form.nome.label }}</label>
+                    {{ form.nome }}
+                    <div class="text-danger small">{{ form.nome.errors }}</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.cpf_cnpj.id_for_label }}" class="form-label">{{ form.cpf_cnpj.label }}</label>
+                    {{ form.cpf_cnpj }}
+                    <div class="text-danger small">{{ form.cpf_cnpj.errors }}</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.telefone.id_for_label }}" class="form-label">{{ form.telefone.label }}</label>
+                    {{ form.telefone }}
+                    <div class="text-danger small">{{ form.telefone.errors }}</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.whatsapp.id_for_label }}" class="form-label">{{ form.whatsapp.label }}</label>
+                    {{ form.whatsapp }}
+                    <div class="text-danger small">{{ form.whatsapp.errors }}</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                    {{ form.email }}
+                    <div class="text-danger small">{{ form.email.errors }}</div>
+                </div>
+            </div>
+            
+            <h5 class="mb-3 text-primary border-bottom pb-2">Endereço</h5>
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.cep.id_for_label }}" class="form-label">{{ form.cep.label }}</label>
+                    {{ form.cep }}
+                    <div class="text-danger small">{{ form.cep.errors }}</div>
+                </div>
+                <div class="col-md-7 mb-3">
+                    <label for="{{ form.endereco.id_for_label }}" class="form-label">{{ form.endereco.label }}</label>
+                    {{ form.endereco }}
+                    <div class="text-danger small">{{ form.endereco.errors }}</div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.numero.id_for_label }}" class="form-label">{{ form.numero.label }}</label>
+                    {{ form.numero }}
+                    <div class="text-danger small">{{ form.numero.errors }}</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.complemento.id_for_label }}" class="form-label">{{ form.complemento.label }}</label>
+                    {{ form.complemento }}
+                    <div class="text-danger small">{{ form.complemento.errors }}</div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.bairro.id_for_label }}" class="form-label">{{ form.bairro.label }}</label>
+                    {{ form.bairro }}
+                    <div class="text-danger small">{{ form.bairro.errors }}</div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.cidade.id_for_label }}" class="form-label">{{ form.cidade.label }}</label>
+                    {{ form.cidade }}
+                    <div class="text-danger small">{{ form.cidade.errors }}</div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.estado.id_for_label }}" class="form-label">{{ form.estado.label }}</label>
+                    {{ form.estado }}
+                    <div class="text-danger small">{{ form.estado.errors }}</div>
+                </div>
+            </div>
+            
+            <h5 class="mb-3 text-primary border-bottom pb-2">Outros</h5>
+            <div class="row mb-4">
+                <div class="col-md-12 mb-3">
+                    <label for="{{ form.observacoes.id_for_label }}" class="form-label">{{ form.observacoes.label }}</label>
+                    {{ form.observacoes }}
+                    <div class="text-danger small">{{ form.observacoes.errors }}</div>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <div class="form-check form-switch">
+                        {{ form.ativo }}
+                        <label class="form-check-label" for="{{ form.ativo.id_for_label }}">Cliente Ativo</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 border-top pt-3 text-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Salvar Cliente
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

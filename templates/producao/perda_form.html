@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Perda - FL3D Manager{% endblock %}
+{% block page_title %}Registrar Perda Manual{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'producao:perdas' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="alert alert-warning mb-4">
+            <i class="bi bi-info-circle me-1"></i>
+            Ao salvar, o estoque do filamento será <strong>reduzido automaticamente</strong> pela quantidade informada.
+        </div>
+
+        <div class="card shadow-sm border-warning">
+            <div class="card-header bg-warning text-dark py-3">
+                <h6 class="m-0"><i class="bi bi-exclamation-triangle me-2"></i>Dados da Perda</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.filamento.label }} *</label>
+                            {{ form.filamento }}
+                            <div class="text-danger small">{{ form.filamento.errors }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.quantidade.label }} *</label>
+                            <div class="input-group">
+                                {{ form.quantidade }}
+                                <span class="input-group-text">g</span>
+                            </div>
+                            <div class="text-danger small">{{ form.quantidade.errors }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.motivo.label }} *</label>
+                            {{ form.motivo }}
+                            <div class="text-danger small">{{ form.motivo.errors }}</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">{{ form.pedido.label }}</label>
+                            {{ form.pedido }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">{{ form.produto.label }}</label>
+                            {{ form.produto }}
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">{{ form.observacao.label }}</label>
+                            {{ form.observacao }}
+                        </div>
+                    </div>
+
+                    <div class="text-end border-top pt-3">
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="bi bi-check-circle"></i> Registrar Perda
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

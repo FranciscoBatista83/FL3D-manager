@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Impressoras - FL3D Manager{% endblock %}
+{% block page_title %}Impressoras{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'impressoras:nova' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Nova Impressora
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for impressora in impressoras %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center py-2
+                {% if impressora.status == 'disponivel' %}bg-success text-white
+                {% elif impressora.status == 'imprimindo' %}bg-primary text-white
+                {% elif impressora.status == 'manutencao' %}bg-warning text-dark
+                {% else %}bg-dark text-white{% endif %}">
+                <span class="fw-bold">
+                    <i class="bi bi-printer me-1"></i> {{ impressora.nome }}
+                </span>
+                <span class="badge bg-white
+                    {% if impressora.status == 'disponivel' %}text-success
+                    {% elif impressora.status == 'imprimindo' %}text-primary
+                    {% elif impressora.status == 'manutencao' %}text-warning
+                    {% else %}text-dark{% endif %}">
+                    {{ impressora.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between px-0 py-1">
+                        <span class="text-muted">Fabricante</span>
+                        <span>{{ impressora.fabricante|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-1">
+                        <span class="text-muted">Modelo</span>
+                        <span>{{ impressora.modelo|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-1">
+                        <span class="text-muted">Identificação</span>
+                        <span>{{ impressora.numero_identificacao|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-1">
+                        <span class="text-muted">Aquisição</span>
+                        <span>{{ impressora.data_aquisicao|date:"d/m/Y"|default:"-" }}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-between">
+                <a href="{% url 'impressoras:detalhe' impressora.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-eye"></i> Detalhes
+                </a>
+                <div>
+                    <a href="{% url 'impressoras:editar' impressora.pk %}" class="btn btn-sm btn-outline-primary me-1">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'impressoras:excluir' impressora.pk %}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5 text-muted">
+                <i class="bi bi-printer display-1 d-block mb-3 text-black-50"></i>
+                <h5>Nenhuma impressora cadastrada.</h5>
+                <a href="{% url 'impressoras:nova' %}" class="btn btn-primary mt-2">
+                    <i class="bi bi-plus-circle"></i> Cadastrar Primeira Impressora
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

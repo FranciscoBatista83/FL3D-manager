@@ -1,0 +1,73 @@
+# =============================================================================
+# FL3D Manager - Arquivo de Exclusões do Git (.gitignore)
+# =============================================================================
+# Tudo que estiver listado aqui será IGNORADO pelo Git e não irá para o GitHub.
+# =============================================================================
+
+# -------------------------------------------------------
+# SEGURANÇA: Variáveis de ambiente com dados sensíveis
+# -------------------------------------------------------
+.env
+# O .env.example pode ir ao GitHub (não tem dados reais)
+
+# -------------------------------------------------------
+# PYTHON: Arquivos compilados e cache
+# -------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# -------------------------------------------------------
+# AMBIENTE VIRTUAL: Dependências locais
+# -------------------------------------------------------
+venv/
+env/
+.venv/
+ENV/
+
+# -------------------------------------------------------
+# DJANGO: Banco de dados e arquivos gerados
+# -------------------------------------------------------
+db.sqlite3
+db.sqlite3-journal
+
+# Arquivos de mídia enviados pelos usuários (fotos, uploads)
+media/
+
+# Arquivos estáticos compilados (gerados pelo collectstatic)
+staticfiles/
+
+# -------------------------------------------------------
+# EDITORES E IDEs
+# -------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# -------------------------------------------------------
+# LOGS
+# -------------------------------------------------------
+*.log
+logs/
+
+# -------------------------------------------------------
+# DISTRIBUIÇÃO E BUILD
+# -------------------------------------------------------
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# -------------------------------------------------------
+# TESTES E COBERTURA
+# -------------------------------------------------------
+.coverage
+htmlcov/
+.pytest_cache/

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ filamento }} - FL3D Manager{% endblock %}
+{% block page_title %}{{ filamento.material }} {{ filamento.cor }} — {{ filamento.marca }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'estoque:lista' %}" class="btn btn-secondary me-2">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+<a href="{% url 'estoque:ajuste' filamento.pk %}" class="btn btn-warning me-2">
+    <i class="bi bi-sliders"></i> Ajustar Estoque
+</a>
+<a href="{% url 'estoque:editar' filamento.pk %}" class="btn btn-primary">
+    <i class="bi bi-pencil"></i> Editar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Painel do Filamento -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-layers me-2"></i>Detalhes do Filamento</h6>
+            </div>
+            <div class="card-body">
+                <!-- Barra de Estoque -->
+                <div class="text-center mb-4">
+                    <div class="display-6 fw-bold {% if percentual_restante <= 20 %}text-danger{% elif percentual_restante <= 50 %}text-warning{% else %}text-success{% endif %}">
+                        {{ filamento.peso_atual }}g
+                    </div>
+                    <div class="text-muted">de {{ filamento.peso_inicial }}g iniciais</div>
+                    <div class="progress mt-2" style="height: 12px;">
+                        <div class="progress-bar
+                            {% if percentual_restante > 50 %}bg-success
+                            {% elif percentual_restante > 20 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            role="progressbar"
+                            style="width: {{ percentual_restante }}%">
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ percentual_restante }}% restante</small>
+                    {% if percentual_restante <= 20 %}
+                    <div class="alert alert-danger py-1 mt-2 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Estoque crítico!
+                    </div>
+                    {% endif %}
+                </div>
+
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Marca</span>
+                        <span class="fw-bold">{{ filamento.marca }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Material</span>
+                        <span class="fw-bold">{{ filamento.material }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Cor</span>
+                        <span class="fw-bold">{{ filamento.cor }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Custo do Rolo</span>
+                        <span class="fw-bold text-success">R$ {{ filamento.custo_rolo|floatformat:2 }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Custo por grama</span>
+                        <span class="fw-bold">
+                            {% if filamento.peso_inicial > 0 %}
+                                R$ {% widthratio filamento.custo_rolo filamento.peso_inicial 100 %}/100g
+                            {% else %}-{% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Fornecedor</span>
+                        <span class="fw-bold">{{ filamento.fornecedor|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Lote</span>
+                        <span class="fw-bold">{{ filamento.codigo_lote|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Localização</span>
+                        <span class="fw-bold">{{ filamento.localizacao|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Entrada</span>
+                        <span class="fw-bold">{{ filamento.data_entrada|date:"d/m/Y" }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Movimentações -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-clock-history me-2"></i>Histórico de Movimentações</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Data</th>
+                                <th>Tipo</th>
+                                <th class="text-end">Quantidade</th>
+                                <th class="text-end">Saldo Anterior</th>
+                                <th class="text-end pe-3">Saldo Novo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mov in movimentacoes %}
+                            <tr>
+                                <td class="ps-3">
+                                    <div>{{ mov.data|date:"d/m/Y" }}</div>
+                                    <small class="text-muted">{{ mov.data|date:"H:i" }}</small>
+                                </td>
+                                <td>
+                                    {% if mov.tipo == 'entrada' %}<span class="badge bg-success">{{ mov.get_tipo_display }}</span>
+                                    {% elif mov.tipo == 'consumo' %}<span class="badge bg-primary">{{ mov.get_tipo_display }}</span>
+                                    {% elif mov.tipo == 'perda' %}<span class="badge bg-danger">{{ mov.get_tipo_display }}</span>
+                                    {% elif mov.tipo == 'ajuste' %}<span class="badge bg-warning text-dark">{{ mov.get_tipo_display }}</span>
+                                    {% endif %}
+                                    {% if mov.motivo %}
+                                    <div class="small text-muted">{{ mov.motivo|truncatechars:60 }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end fw-bold {% if mov.quantidade >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if mov.quantidade >= 0 %}+{% endif %}{{ mov.quantidade }}g
+                                </td>
+                                <td class="text-end text-muted">{{ mov.quantidade_anterior|default:"-" }}g</td>
+                                <td class="text-end pe-3 fw-bold">{{ mov.quantidade_nova|default:"-" }}g</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Nenhuma movimentação registrada.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

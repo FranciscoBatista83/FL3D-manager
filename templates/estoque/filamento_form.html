@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - FL3D Manager{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'estoque:lista' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        {% if not object %}
+        <div class="alert alert-info mb-4">
+            <i class="bi bi-info-circle me-1"></i>
+            Ao cadastrar, o estoque inicial será igual ao <strong>Peso Inicial</strong> informado e uma movimentação de <strong>Entrada</strong> será registrada automaticamente.
+        </div>
+        {% else %}
+        <div class="alert alert-warning mb-4">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            Para alterar o saldo de estoque, use a função de <strong>Ajuste</strong> na listagem. O formulário de edição não modifica o peso atual.
+        </div>
+        {% endif %}
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary"><i class="bi bi-layers me-2"></i>Dados do Filamento</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <h5 class="text-primary border-bottom pb-2 mb-3">Identificação</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.marca.label }} *</label>
+                            {{ form.marca }}
+                            <div class="text-danger small">{{ form.marca.errors }}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.material.label }} *</label>
+                            {{ form.material }}
+                            <div class="text-danger small">{{ form.material.errors }}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.cor.label }} *</label>
+                            {{ form.cor }}
+                            <div class="text-danger small">{{ form.cor.errors }}</div>
+                        </div>
+                    </div>
+
+                    <h5 class="text-primary border-bottom pb-2 mb-3">Peso e Custo</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.peso_inicial.label }} *</label>
+                            <div class="input-group">
+                                {{ form.peso_inicial }}
+                                <span class="input-group-text">g</span>
+                            </div>
+                            <div class="text-danger small">{{ form.peso_inicial.errors }}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.custo_rolo.label }} *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                {{ form.custo_rolo }}
+                            </div>
+                            <div class="text-danger small">{{ form.custo_rolo.errors }}</div>
+                        </div>
+                        {% if object %}
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Peso Atual (Saldo)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" value="{{ object.peso_atual }}g" readonly>
+                                <span class="input-group-text text-warning"><i class="bi bi-lock-fill"></i></span>
+                            </div>
+                            <small class="text-muted">Use "Ajustar" para alterar.</small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="text-primary border-bottom pb-2 mb-3">Fornecedor e Localização</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.fornecedor.label }}</label>
+                            {{ form.fornecedor }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.codigo_lote.label }}</label>
+                            {{ form.codigo_lote }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.localizacao.label }}</label>
+                            {{ form.localizacao }}
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">{{ form.observacoes.label }}</label>
+                            {{ form.observacoes }}
+                        </div>
+                    </div>
+
+                    <div class="text-end border-top pt-3">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Salvar Filamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
