@@ -29,4 +29,7 @@ urlpatterns = [
 
     # Botão de ativar/desativar — recebe POST com o ID do usuário
     path('<int:pk>/toggle/', views.UsuarioToggleAtivoView.as_view(), name='toggle'),
+
+    # Exclusão definitiva do usuário
+    path('<int:pk>/excluir/', views.UsuarioExcluirView.as_view(), name='excluir'),
 ]

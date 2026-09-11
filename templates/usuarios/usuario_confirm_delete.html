@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Usuário - FL3D Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Atenção: Exclusão Permanente
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <p class="fs-5">Você tem certeza que deseja excluir o usuário abaixo?</p>
+                
+                <div class="alert alert-secondary">
+                    <strong>Nome:</strong> {{ object.first_name }} {{ object.last_name }}<br>
+                    <strong>Login:</strong> {{ object.username }}<br>
+                    <strong>E-mail:</strong> {{ object.email }}
+                </div>
+                
+                <div class="alert alert-warning mb-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Dica:</strong> Em vez de excluir, você pode apenas desativar a conta deste usuário na tela de listagem.
+                    A exclusão não pode ser desfeita.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'usuarios:lista' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Sim, Excluir Usuário
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

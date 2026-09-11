@@ -16,7 +16,7 @@ Usa o modelo User nativo do Django — sem modelos extras.
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.views.generic import ListView, CreateView, UpdateView, View
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, View
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 
@@ -124,3 +124,27 @@ class UsuarioToggleAtivoView(LoginRequiredMixin, View):
         status = 'ativado' if usuario.is_active else 'desativado'
         messages.success(request, f'Usuário "{usuario.username}" foi {status} com sucesso.')
         return redirect('usuarios:lista')
+
+
+class UsuarioExcluirView(LoginRequiredMixin, DeleteView):
+    """
+    Tela de confirmação para excluir definitivamente um usuário.
+    Impede que o usuário logado exclua a si mesmo.
+    """
+    model = User
+    template_name = 'usuarios/usuario_confirm_delete.html'
+    success_url = reverse_lazy('usuarios:lista')
+
+    def dispatch(self, request, *args, **kwargs):
+        # Validação extra antes de exibir a página ou processar o POST
+        usuario = self.get_object()
+        if usuario == request.user:
+            messages.error(request, 'Ação negada: Você não pode excluir a sua própria conta.')
+            return redirect('usuarios:lista')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        # Para DeleteView, form_valid faz a exclusão de fato
+        usuario = self.get_object()
+        messages.success(self.request, f'Usuário "{usuario.username}" excluído permanentemente.')
+        return super().form_valid(form)

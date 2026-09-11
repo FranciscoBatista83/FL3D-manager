@@ -175,6 +175,11 @@
                                     </button>
                                 {% endif %}
                             </form>
+                            
+                            <!-- Botão excluir -->
+                            <a href="{% url 'usuarios:excluir' u.pk %}" class="btn-toggle-ativo" title="Excluir Definitivamente">
+                                <i class="bi bi-trash-fill"></i>
+                            </a>
                             {% endif %}
                         </div>
                     </td>
