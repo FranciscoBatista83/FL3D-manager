@@ -15,27 +15,26 @@ from .models import Impressora
 
 class ImpressoraForm(forms.ModelForm):
     """
-    Formulário para registrar novas máquinas ou atualizar o status e observações.
+    Formulário para registrar novas máquinas ou atualizar dados técnicos.
     """
     class Meta:
         model = Impressora
         fields = [
-            'nome', 'fabricante', 'modelo', 'numero_identificacao',
-            'data_aquisicao', 'status', 'observacoes'
+            'nome', 'fabricante', 'modelo', 'potencia_w',
+            'data_aquisicao', 'observacoes'
         ]
         widgets = {
-            # Habilita o calendário interativo no campo de data de aquisição
             'data_aquisicao': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'observacoes': forms.Textarea(attrs={'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
         """
-        Aplica estilos CSS para harmonizar os campos com o design moderno do Bootstrap 5.
+        Aplica estilos CSS para harmonizar os campos com o Bootstrap 5.
         """
         super().__init__(*args, **kwargs)
-        for field in self.fields:
-            if field == 'status':
-                # O campo de seleção ganha o estilo específico 'form-select'
-                self.fields[field].widget.attrs['class'] = 'form-select'
-            else:
-                self.fields[field].widget.attrs['class'] = 'form-control'
+        is_new = not self.instance.pk
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+            if is_new:
+                field.initial = None

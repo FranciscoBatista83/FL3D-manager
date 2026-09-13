@@ -18,7 +18,6 @@ class ImpressoraAdmin(admin.ModelAdmin):
     """
     Configuração das Impressoras no painel administrativo.
     """
-    list_display = ('nome', 'fabricante', 'modelo', 'numero_identificacao', 'status', 'data_aquisicao')
-    list_filter = ('status', 'fabricante')
-    search_fields = ('nome', 'fabricante', 'modelo', 'numero_identificacao')
-    list_editable = ('status',)  # Permite alterar o status diretamente na lista do admin!
+    list_display = ('nome', 'fabricante', 'modelo', 'potencia_w', 'data_aquisicao')
+    list_filter = ('fabricante',)
+    search_fields = ('nome', 'fabricante', 'modelo')

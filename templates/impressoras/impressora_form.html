@@ -21,34 +21,38 @@
                     {% csrf_token %}
 
                     <div class="row mb-3">
-                        <div class="col-md-8 mb-3">
-                            <label class="form-label fw-bold">{{ form.nome.label }} *</label>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-semibold">{{ form.nome.label }} *</label>
                             {{ form.nome }}
                             <div class="text-danger small">{{ form.nome.errors }}</div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">{{ form.status.label }}</label>
-                            {{ form.status }}
-                        </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">{{ form.fabricante.label }}</label>
+                            <label class="form-label fw-semibold">{{ form.fabricante.label }}</label>
                             {{ form.fabricante }}
+                            <div class="text-danger small">{{ form.fabricante.errors }}</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">{{ form.modelo.label }}</label>
+                            <label class="form-label fw-semibold">{{ form.modelo.label }}</label>
                             {{ form.modelo }}
+                            <div class="text-danger small">{{ form.modelo.errors }}</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">{{ form.numero_identificacao.label }}</label>
-                            {{ form.numero_identificacao }}
+                            <label class="form-label fw-semibold">{{ form.potencia_w.label }}</label>
+                            <div class="input-group">
+                                {{ form.potencia_w }}
+                                <span class="input-group-text">W</span>
+                            </div>
+                            <div class="text-danger small">{{ form.potencia_w.errors }}</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">{{ form.data_aquisicao.label }}</label>
+                            <label class="form-label fw-semibold">{{ form.data_aquisicao.label }}</label>
                             {{ form.data_aquisicao }}
+                            <div class="text-danger small">{{ form.data_aquisicao.errors }}</div>
                         </div>
                         <div class="col-md-12 mb-3">
-                            <label class="form-label">{{ form.observacoes.label }}</label>
+                            <label class="form-label fw-semibold">{{ form.observacoes.label }}</label>
                             {{ form.observacoes }}
+                            <div class="text-danger small">{{ form.observacoes.errors }}</div>
                         </div>
                     </div>
 

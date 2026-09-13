@@ -16,24 +16,11 @@
 <div class="row">
     <div class="col-md-4 mb-4">
         <div class="card shadow-sm">
-            <div class="card-header py-3
-                {% if impressora.status == 'disponivel' %}bg-success text-white
-                {% elif impressora.status == 'imprimindo' %}bg-primary text-white
-                {% elif impressora.status == 'manutencao' %}bg-warning text-dark
-                {% else %}bg-dark text-white{% endif %}">
-                <h6 class="m-0"><i class="bi bi-printer me-2"></i>{{ impressora.nome }}</h6>
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 text-primary fw-bold"><i class="bi bi-printer me-2"></i>{{ impressora.nome }}</h6>
             </div>
             <div class="card-body">
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">Status</span>
-                        <span>
-                            {% if impressora.status == 'disponivel' %}<span class="badge bg-success fs-6">{{ impressora.get_status_display }}</span>
-                            {% elif impressora.status == 'imprimindo' %}<span class="badge bg-primary fs-6">{{ impressora.get_status_display }}</span>
-                            {% elif impressora.status == 'manutencao' %}<span class="badge bg-warning text-dark fs-6">{{ impressora.get_status_display }}</span>
-                            {% else %}<span class="badge bg-dark fs-6">{{ impressora.get_status_display }}</span>{% endif %}
-                        </span>
-                    </li>
                     <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Fabricante</span>
                         <span class="fw-bold">{{ impressora.fabricante|default:"-" }}</span>
@@ -43,8 +30,8 @@
                         <span class="fw-bold">{{ impressora.modelo|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">Nº Identificação</span>
-                        <span class="fw-bold">{{ impressora.numero_identificacao|default:"-" }}</span>
+                        <span class="text-muted">Potência</span>
+                        <span class="fw-bold text-dark">{% if impressora.potencia_w %}{{ impressora.potencia_w }} W{% else %}-{% endif %}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Data de Aquisição</span>

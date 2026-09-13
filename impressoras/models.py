@@ -27,15 +27,6 @@ class Impressora(models.Model):
     """
     Representa uma impressora 3D física pertencente à oficina.
     """
-    class StatusChoices(models.TextChoices):
-        """
-        Situações operacionais possíveis para a impressora.
-        """
-        DISPONIVEL = 'disponivel', 'Disponível'        # Livre para iniciar um novo trabalho
-        IMPRIMINDO = 'imprimindo', 'Imprimindo'        # Executando um trabalho no momento
-        MANUTENCAO = 'manutencao', 'Em Manutenção'    # Passando por reparos ou calibração
-        INATIVA = 'inativa', 'Inativa'                # Desativada temporariamente ou aposentada
-
     # Nome de identificação dado à máquina na oficina (ex: "Bambu Lab P1S - Sala 1")
     nome = models.CharField('Nome', max_length=100)
     
@@ -45,19 +36,11 @@ class Impressora(models.Model):
     # Modelo específico (ex: "K1 Max", "Ender 3 S1 Pro", "A1 Mini")
     modelo = models.CharField('Modelo', max_length=100, blank=True, null=True)
     
-    # Número de patrimônio ou número de série do equipamento
-    numero_identificacao = models.CharField('Número de Identificação', max_length=50, blank=True, null=True)
-    
+    # Potência nominal consumida pela impressora em Watts (W)
+    potencia_w = models.DecimalField('Potência (W)', max_digits=8, decimal_places=2, blank=True, null=True, help_text='Potência consumida pela impressora em Watts (W)')
+
     # Data em que o equipamento foi comprado e incorporado ao estúdio
     data_aquisicao = models.DateField('Data de Aquisição', blank=True, null=True)
-    
-    # Estado operacional atual (o padrão ao cadastrar é DISPONÍVEL)
-    status = models.CharField(
-        'Status', 
-        max_length=20, 
-        choices=StatusChoices.choices, 
-        default=StatusChoices.DISPONIVEL
-    )
     
     # Histórico de revisões, troca de peças ou upgrades (ex: "Instalado bico de aço endurecido 0.4mm")
     observacoes = models.TextField('Observações', blank=True, null=True)
@@ -68,5 +51,4 @@ class Impressora(models.Model):
         ordering = ['nome']
 
     def __str__(self):
-        # Exibe o nome acompanhado do status atual (ex: "Ender 3 (Imprimindo)")
-        return f"{self.nome} ({self.get_status_display()})"
+        return self.nome

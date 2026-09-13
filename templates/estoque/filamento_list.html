@@ -5,7 +5,7 @@
 
 {% block page_actions %}
 <a href="{% url 'estoque:novo' %}" class="btn btn-primary">
-    <i class="bi bi-plus-circle"></i> Novo Filamento
+    <i class="bi bi-plus-circle"></i> Novo Produto
 </a>
 {% endblock %}
 
@@ -34,75 +34,42 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-3">Filamento</th>
-                        <th>Fornecedor / Lote</th>
-                        <th style="min-width: 200px">Estoque</th>
-                        <th>Custo</th>
+                        <th class="ps-3">Produto / Item</th>
+                        <th>Marca</th>
+                        <th>Cor</th>
+                        <th>Quantidade</th>
+                        <th>Preço</th>
+                        <th>Fornecedor</th>
                         <th class="text-end pe-3">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for f in filamentos %}
-                    {% with percentual=f.peso_atual|floatformat:0 %}
-                    {% if f.peso_inicial > 0 %}
-                        {% widthratio f.peso_atual f.peso_inicial 100 as pct %}
-                    {% else %}
-                        {% with pct=0 %}{% endwith %}
-                    {% endif %}
                     <tr>
                         <td class="ps-3">
                             <a href="{% url 'estoque:detalhe' f.pk %}" class="text-decoration-none fw-bold">
-                                {{ f.material }} {{ f.cor }}
+                                {{ f.nome|default:f.material|default:"Sem nome" }}
                             </a>
-                            <div class="small text-muted">{{ f.marca }}</div>
                         </td>
-                        <td>
-                            <div>{{ f.fornecedor|default:"-" }}</div>
-                            {% if f.codigo_lote %}<small class="text-muted">Lote: {{ f.codigo_lote }}</small>{% endif %}
-                        </td>
-                        <td>
-                            <div class="d-flex justify-content-between mb-1">
-                                <small class="fw-bold {% if f.peso_atual < f.peso_inicial|floatformat:0|add:0 %}text-warning{% endif %}">
-                                    {{ f.peso_atual }}g
-                                </small>
-                                <small class="text-muted">de {{ f.peso_inicial }}g</small>
-                            </div>
-                            {% widthratio f.peso_atual f.peso_inicial 100 as pct_val %}
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar 
-                                    {% if pct_val|add:0 > 50 %}bg-success
-                                    {% elif pct_val|add:0 > 20 %}bg-warning
-                                    {% else %}bg-danger{% endif %}"
-                                    role="progressbar"
-                                    style="width: {{ pct_val }}%"
-                                    aria-valuenow="{{ pct_val }}"
-                                    aria-valuemin="0"
-                                    aria-valuemax="100">
-                                </div>
-                            </div>
-                            {% if pct_val|add:0 <= 20 %}
-                                <small class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Estoque baixo</small>
-                            {% endif %}
-                        </td>
-                        <td>R$ {{ f.custo_rolo|floatformat:2 }}</td>
+                        <td>{{ f.marca|default:"-" }}</td>
+                        <td>{{ f.cor|default:"-" }}</td>
+                        <td><span class="badge bg-primary text-white fs-6">{{ f.quantidade|default:f.peso_atual|default:"0" }}</span></td>
+                        <td class="fw-bold text-success">R$ {{ f.preco|default:f.custo_rolo|default:"0.00"|floatformat:2 }}</td>
+                        <td>{{ f.fornecedor|default:"-" }}</td>
                         <td class="text-end pe-3">
-                            <a href="{% url 'estoque:detalhe' f.pk %}" class="btn btn-sm btn-outline-secondary" title="Histórico">
-                                <i class="bi bi-clock-history"></i>
-                            </a>
-                            <a href="{% url 'estoque:ajuste' f.pk %}" class="btn btn-sm btn-outline-warning" title="Ajustar Estoque">
-                                <i class="bi bi-sliders"></i>
+                            <a href="{% url 'estoque:detalhe' f.pk %}" class="btn btn-sm btn-outline-secondary" title="Detalhes">
+                                <i class="bi bi-eye"></i>
                             </a>
                             <a href="{% url 'estoque:editar' f.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
                         </td>
                     </tr>
-                    {% endwith %}
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            <i class="bi bi-layers display-4 d-block mb-2 text-black-50"></i>
-                            Nenhum filamento cadastrado.
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-box-seam display-4 d-block mb-2 text-black-50"></i>
+                            Nenhum produto cadastrado no estoque.
                         </td>
                     </tr>
                     {% endfor %}

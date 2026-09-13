@@ -1,4 +1,4 @@
-﻿"""
+"""
 =============================================================================
 FL3D Manager - Modelos de Dados do Módulo de Estoque (models.py)
 =============================================================================
@@ -27,50 +27,33 @@ from django.contrib.auth.models import User
 
 class Filamento(models.Model):
     """
-    Representa um carretel/bobina de filamento físico no estoque da oficina 3D.
+    Representa um produto / item físico no estoque da oficina 3D.
     """
-    # Marca do fabricante (ex: Voolt3D, Creality, Polymaker, eSun)
-    marca = models.CharField('Marca', max_length=100)
-    
-    # Tipo de polímero/plástico (ex: PLA, PLA Silk, PETG, ABS, TPU Flexível)
-    material = models.CharField('Material', max_length=100)
-    
-    # Cor visual do filamento (ex: Preto Fosco, Vermelho Rubi, Azul Céu, Branco Neve)
-    cor = models.CharField('Cor', max_length=100)
-    
-    # Peso total do filamento quando o rolo foi comprado/aberto (geralmente 1000g ou 250g)
-    peso_inicial = models.DecimalField('Peso Inicial (g)', max_digits=8, decimal_places=2)
-    
-    # Quantidade de plástico que ainda sobra no rolo neste momento.
-    # Conforme as impressões vão sendo concluídas, este número diminui automaticamente!
-    peso_atual = models.DecimalField('Peso Atual (g)', max_digits=8, decimal_places=2)
-    
-    # Quanto foi pago pelo rolo na compra (ex: R$ 95,00). Usado para calcular o custo do grama!
-    custo_rolo = models.DecimalField('Custo do Rolo', max_digits=8, decimal_places=2)
-    
-    # Data em que o carretel chegou e foi cadastrado na oficina
-    data_entrada = models.DateField('Data de Entrada', auto_now_add=True)
-    
-    # De quem o filamento foi comprado (ex: Loja 3D, Mercado Livre, Fabricante Direto)
-    fornecedor = models.CharField('Fornecedor', max_length=150, blank=True, null=True)
-    
-    # Lote de fabricação do carretel (útil caso venha com variação de cor ou diâmetro)
-    codigo_lote = models.CharField('Código/Lote', max_length=100, blank=True, null=True)
-    
-    # Onde a bobina está guardada na oficina (ex: "Prateleira A", "Caixa Hermética 1")
-    localizacao = models.CharField('Localização', max_length=100, blank=True, null=True)
-    
-    # Notas adicionais (ex: "Secar a 50°C antes de usar", "Temperatura de bico ideal 215°C")
+    nome = models.CharField('Nome', max_length=150, blank=True, null=True)
+    marca = models.CharField('Marca', max_length=100, blank=True, null=True)
+    material = models.CharField('Material', max_length=100, blank=True, null=True)
+    cor = models.CharField('Cor', max_length=100, blank=True, null=True)
+    quantidade = models.DecimalField('Quantidade', max_digits=10, decimal_places=2, default=0.00, blank=True, null=True)
+    preco = models.DecimalField('Preço (R$)', max_digits=10, decimal_places=2, default=0.00, blank=True, null=True)
+    fornecedor = models.CharField(max_length=150, blank=True, null=True)
     observacoes = models.TextField('Observações', blank=True, null=True)
 
+    # Campos Legados
+    peso_inicial = models.DecimalField('Peso Inicial (g)', max_digits=8, decimal_places=2, blank=True, null=True)
+    peso_atual = models.DecimalField('Peso Atual (g)', max_digits=8, decimal_places=2, blank=True, null=True)
+    custo_rolo = models.DecimalField('Custo do Rolo', max_digits=8, decimal_places=2, blank=True, null=True)
+    data_entrada = models.DateField('Data de Entrada', auto_now_add=True)
+    codigo_lote = models.CharField('Código/Lote', max_length=100, blank=True, null=True)
+    localizacao = models.CharField('Localização', max_length=100, blank=True, null=True)
+
     class Meta:
-        verbose_name = 'Filamento'
-        verbose_name_plural = 'Filamentos'
-        ordering = ['-data_entrada']  # Exibe os mais novos no topo
+        verbose_name = 'Item de Estoque'
+        verbose_name_plural = 'Itens de Estoque'
+        ordering = ['-data_entrada']
 
     def __str__(self):
-        # Texto exibido ao selecionar o filamento na fila de produção ou pedidos
-        return f"{self.material} {self.cor} - {self.marca} ({self.peso_atual}g restantes)"
+        nome_display = self.nome or self.material or 'Item de Estoque'
+        return f"{nome_display} - {self.marca or ''}"
 
 
 class MovimentacaoEstoque(models.Model):

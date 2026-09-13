@@ -1,4 +1,4 @@
-﻿"""
+"""
 =============================================================================
 FL3D Manager - Visualizações do Módulo de Estoque (views.py)
 =============================================================================
@@ -40,24 +40,22 @@ class FilamentoListView(LoginRequiredMixin, ListView):
     paginate_by = 20  # 20 bobinas por página
 
     def get_queryset(self):
-        """
-        Permite buscar por Marca, Material ou Cor simultaneamente.
-        Exemplo: se digitar 'vermelho', encontra qualquer rolo de cor vermelha.
-        """
         qs = super().get_queryset()
         busca = self.request.GET.get('q')
         if busca:
             qs = qs.filter(
+                Q(nome__icontains=busca) |
                 Q(marca__icontains=busca) |
                 Q(material__icontains=busca) |
-                Q(cor__icontains=busca)
+                Q(cor__icontains=busca) |
+                Q(fornecedor__icontains=busca)
             )
         return qs
 
 
 class FilamentoCreateView(LoginRequiredMixin, CreateView):
     """
-    Tela de cadastro de uma nova bobina de filamento que chegou à oficina.
+    Tela de cadastro de um novo produto / item no estoque.
     """
     model = Filamento
     form_class = FilamentoForm
@@ -65,45 +63,25 @@ class FilamentoCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('estoque:lista')
 
     def form_valid(self, form):
-        """
-        Quando o formulário é enviado com sucesso:
-        1. Define peso_atual = peso_inicial.
-        2. Salva o filamento.
-        3. Cria a movimentação de auditoria do tipo 'ENTRADA'.
-        """
         filamento = form.save(commit=False)
-        
-        # REGRA: O rolo novo começa 100% cheio
-        filamento.peso_atual = filamento.peso_inicial
+        # Sincroniza campos para compatibilidade
+        filamento.peso_inicial = filamento.quantidade
+        filamento.peso_atual = filamento.quantidade
+        filamento.custo_rolo = filamento.preco
         filamento.save()
 
-        # REGRA DE AUDITORIA: Registra a entrada oficial no livro de movimentações
-        MovimentacaoEstoque.objects.create(
-            filamento=filamento,
-            tipo=MovimentacaoEstoque.TipoChoices.ENTRADA,
-            quantidade=filamento.peso_inicial,
-            quantidade_anterior=0,
-            quantidade_nova=filamento.peso_inicial,
-            motivo='Entrada inicial do filamento no estoque.',
-            usuario=self.request.user,
-        )
-
-        messages.success(
-            self.request,
-            f'Filamento "{filamento}" cadastrado com sucesso! '
-            f'Entrada de {filamento.peso_inicial}g registrada no estoque.'
-        )
+        messages.success(self.request, f'Produto "{filamento}" cadastrado com sucesso!')
         return redirect(self.success_url)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['titulo'] = 'Novo Filamento'
+        ctx['titulo'] = 'Novo Produto'
         return ctx
 
 
 class FilamentoUpdateView(LoginRequiredMixin, UpdateView):
     """
-    Tela para editar informações cadastrais do filamento (marca, cor, fornecedor, etc.).
+    Tela para editar informações do produto no estoque.
     """
     model = Filamento
     form_class = FilamentoForm
@@ -111,19 +89,14 @@ class FilamentoUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('estoque:lista')
 
     def form_valid(self, form):
-        """
-        SEGURANÇA: Garante que o peso_atual não seja modificado diretamente nesta tela.
-        O peso atual permanece rigorosamente o mesmo que já estava no banco.
-        """
         filamento = form.save(commit=False)
-        filamento.peso_atual = Filamento.objects.get(pk=filamento.pk).peso_atual
         filamento.save()
-        messages.success(self.request, 'Filamento atualizado com sucesso!')
+        messages.success(self.request, 'Produto atualizado com sucesso!')
         return redirect(self.success_url)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['titulo'] = f'Editar Filamento: {self.object}'
+        ctx['titulo'] = f'Editar Produto: {self.object}'
         return ctx
 
 

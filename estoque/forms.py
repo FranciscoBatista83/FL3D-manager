@@ -1,4 +1,4 @@
-﻿"""
+"""
 =============================================================================
 FL3D Manager - Formulários do Módulo de Estoque (forms.py)
 =============================================================================
@@ -20,29 +20,40 @@ from .models import Filamento
 
 class FilamentoForm(forms.ModelForm):
     """
-    Formulário de cadastro e edição de carretéis de filamento.
-    
-    REGRA DE NEGÓCIO DE OURO:
-    O campo 'peso_atual' é excluído propositalmente deste formulário.
-    Nenhum usuário pode simplesmente digitar um peso qualquer na edição.
-    Toda alteração de gramas deve acontecer via movimentação registrada
-    (impressão, perda ou ajuste de balança).
+    Formulário de cadastro e edição de produtos/itens no estoque.
     """
     class Meta:
         model = Filamento
         fields = [
-            'marca', 'material', 'cor',
-            'peso_inicial', 'custo_rolo',
-            'fornecedor', 'codigo_lote', 'localizacao', 'observacoes'
+            'nome', 'marca', 'cor', 'quantidade', 'preco',
+            'fornecedor', 'observacoes'
         ]
+        widgets = {
+            'observacoes': forms.Textarea(attrs={'rows': 3}),
+        }
+        labels = {
+            'nome': 'Nome do Produto',
+            'marca': 'Marca',
+            'cor': 'Cor',
+            'quantidade': 'Quantidade',
+            'preco': 'Preço (R$)',
+            'fornecedor': 'Fornecedor',
+            'observacoes': 'Observações',
+        }
 
     def __init__(self, *args, **kwargs):
         """
-        Aplica os estilos visuais modernos do Bootstrap 5 a todos os campos.
+        Aplica estilos CSS para harmonizar os campos com o Bootstrap 5 e garante tela limpa em novos cadastros.
         """
         super().__init__(*args, **kwargs)
-        for field in self.fields:
-            self.fields[field].widget.attrs['class'] = 'form-control'
+        # Força labels em português para evitar tradução automática incorreta do Django
+        self.fields['fornecedor'].label = 'Fornecedor'
+        is_new = not self.instance.pk
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+            if is_new:
+                field.initial = None
+
 
 
 class AjusteEstoqueForm(forms.Form):
