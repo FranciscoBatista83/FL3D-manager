@@ -1,4 +1,4 @@
-﻿"""
+"""
 =============================================================================
 FL3D Manager - Visualizações do Módulo de Produtos (views.py)
 =============================================================================
@@ -53,6 +53,24 @@ class ProdutoCreateView(LoginRequiredMixin, CreateView):
     form_class = ProdutoForm
     template_name = 'produtos/produto_form.html'
     success_url = reverse_lazy('produtos:lista')
+
+    def get_initial(self):
+        """
+        Captura parâmetros repassados pela Calculadora de Precificação via URL.
+        """
+        initial = super().get_initial()
+        fields_to_transfer = [
+            'nome', 'peso_estimado', 'tempo_estimado',
+            'valor_kg_filamento', 'potencia_impressora_w', 'custo_kwh_energia',
+            'custo_embalagem', 'custo_insumos', 'custo_mao_de_obra',
+            'marketplace', 'custo_taxas_marketplace',
+            'custo_estimado', 'preco_venda', 'margem_lucro'
+        ]
+        for field in fields_to_transfer:
+            val = self.request.GET.get(field)
+            if val is not None and val != '':
+                initial[field] = val
+        return initial
 
     def form_valid(self, form):
         """

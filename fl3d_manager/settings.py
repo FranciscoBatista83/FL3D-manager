@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'financeiro',   # Contas a pagar, contas a receber, caixa e faturamento
     'relatorios',   # Relatórios analíticos e indicadores de desempenho
     'usuarios',     # Gestão de usuários do sistema (criar, editar, ativar/desativar)
+    'calculadora',  # Calculadora e precificação de peças 3D
 ]
 
 

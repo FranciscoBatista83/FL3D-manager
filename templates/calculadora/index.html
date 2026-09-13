@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calculadora de Precificação 3D - FL3D Manager{% endblock %}
+
+{% block page_title %}Calculadora de Precificação 3D{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos e tamanhos confortáveis e proporcional ao restante do FL3D Manager */
+    .calc-card {
+        border-radius: 12px;
+        box-shadow: var(--shadow-card);
+        background: #ffffff;
+        margin-bottom: 0.85rem !important;
+    }
+    .calc-card-header {
+        background: #ffffff;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px 12px 0 0 !important;
+        padding: 0.65rem 1.1rem !important;
+    }
+    .calc-card-header h6 {
+        font-weight: 700;
+        color: #1F0938;
+        font-size: 0.95rem;
+    }
+    .calc-card-body {
+        padding: 0.85rem 1.1rem !important;
+    }
+
+    /* Tamanho legível e confortável para formulários */
+    .form-label {
+        margin-bottom: 0.25rem !important;
+        font-size: 0.85rem !important;
+        font-weight: 500;
+    }
+    .form-control, .input-group-text, .form-select {
+        font-size: 0.88rem !important;
+    }
+
+    /* Cards de Resultado */
+    .resultado-card {
+        background: linear-gradient(135deg, #2d1b69 0%, #492f9c 100%);
+        color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(73, 47, 156, 0.22);
+        padding: 1.25rem 1.25rem !important;
+        margin-bottom: 0.85rem !important;
+    }
+    .val-destaque {
+        font-size: 2rem !important;
+        font-weight: 700;
+        color: var(--accent-yellow);
+        line-height: 1.1;
+    }
+    .badge-market {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.78rem;
+    }
+
+    .nav-pills-fl3d .nav-link {
+        color: var(--sidebar-from);
+        font-weight: 600;
+        font-size: 0.85rem !important;
+        padding: 0.35rem 0.8rem !important;
+        border: 1px solid rgba(73, 47, 156, 0.2);
+        border-radius: 8px;
+        margin-right: 6px;
+    }
+    .nav-pills-fl3d .nav-link.active {
+        background-color: var(--sidebar-from);
+        color: #ffffff;
+        border-color: var(--sidebar-from);
+    }
+    .list-group-item {
+        font-size: 0.85rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<form id="formCalculadora">
+    {% csrf_token %}
+
+    <!-- CAMPO NOME DO PRODUTO + BOTÃO SALVAR PRODUTO LADO A LADO -->
+    <div class="card calc-card mb-3">
+        <div class="card-body p-3">
+            <label class="form-label fw-bold text-dark mb-1">
+                <i class="bi bi-tag me-1 text-primary"></i>Nome do Produto / Peça 3D
+            </label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-pencil-square"></i></span>
+                <input type="text" class="form-control calc-input" id="nome_produto">
+                <button type="button" class="btn btn-primary px-3 fw-bold" id="btnSalvarProduto">
+                    <i class="bi bi-floppy me-1"></i> Salvar Produto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- COLUNA DA ESQUERDA: FORMULÁRIO EM 4 CARDS LEGÍVEIS -->
+        <div class="col-lg-7">
+
+            <!-- CARD 1: CANAL DE VENDA / MARKETPLACE -->
+            <div class="card calc-card">
+                <div class="card-header calc-card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-shop me-2 text-primary"></i>1. Canal de Venda / Marketplace</h6>
+                    <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-lightning-charge me-1"></i>Cálculo Automático</span>
+                </div>
+                <div class="card-body calc-card-body">
+                    <ul class="nav nav-pills nav-pills-fl3d mb-0" id="pills-tab" role="tablist">
+                        <li class="nav-item">
+                            <button type="button" class="nav-link active btn-market" data-market="direto">
+                                <i class="bi bi-shop me-1"></i> Venda Direta / Balcão
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link btn-market" data-market="shopee">
+                                <i class="bi bi-bag-check me-1"></i> Shopee
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link btn-market" data-market="tiktok">
+                                <i class="bi bi-tiktok me-1"></i> TikTok Shop
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- CARD 2: IMPRESSÃO 3D E FILAMENTO -->
+            <div class="card calc-card">
+                <div class="card-header calc-card-header">
+                    <h6 class="mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>2. Impressão 3D e Filamento</h6>
+                </div>
+                <div class="card-body calc-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Peso Estimado (g)</label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" class="form-control calc-input" id="peso_g">
+                                <span class="input-group-text">g</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Preço do Filamento (R$/kg)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" class="form-control calc-input" id="valor_kg_filamento">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tempo de Impressão</label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" class="form-control calc-input" id="horas_impressao">
+                                <span class="input-group-text">horas</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Potência Impressora</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control calc-input" id="potencia_w">
+                                <span class="input-group-text">W</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Custo Energia (kWh)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" class="form-control calc-input" id="kwh_preco">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: EMBALAGEM E INSUMOS ADICIONAIS -->
+            <div class="card calc-card">
+                <div class="card-header calc-card-header">
+                    <h6 class="mb-0"><i class="bi bi-archive me-2 text-primary"></i>3. Embalagem e Insumos Adicionais</h6>
+                </div>
+                <div class="card-body calc-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Embalagem (Caixa/Saquinho)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" class="form-control calc-input" id="custo_embalagem">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Insumos (Parafusos/Fita)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" class="form-control calc-input" id="custo_insumos">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Mão de Obra / Acabamento</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" class="form-control calc-input" id="custo_mao_de_obra">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 4: MARGEM DE LUCRO E REGRAS DO MARKETPLACE -->
+            <div class="card calc-card">
+                <div class="card-header calc-card-header">
+                    <h6 class="mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>4. Margem de Lucro Alvo</h6>
+                </div>
+                <div class="card-body calc-card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-6">
+                            <label class="form-label">Margem Desejada sobre Preço Final</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control calc-input" id="margem_alvo" min="0" max="95">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OPÇÕES ESPECÍFICAS SHOPEE (CONDICIONAL) -->
+                    <div id="painel-shopee" class="p-3 mt-3 bg-light rounded border" style="display: none;">
+                        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-bag-check me-1 text-warning"></i>Opções Shopee</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small">Programa de Comissão</label>
+                                <select class="form-select calc-input" id="tipo_vendedor">
+                                    <option value="cnpj" selected>Padrão (14% + R$ 4,00)</option>
+                                    <option value="frete_gratis">Frete Grátis Extra (20% + R$ 4,00)</option>
+                                    <option value="cpf">Vendedor CPF</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input calc-input" type="checkbox" id="cpf_acima_450">
+                                    <label class="form-check-label small" for="cpf_acima_450">
+                                        CPF com mais de 450 vendas (+R$ 5,00/item)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OPÇÕES ESPECÍFICAS TIKTOK (CONDICIONAL) -->
+                    <div id="painel-tiktok" class="p-3 mt-3 bg-light rounded border" style="display: none;">
+                        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-tiktok me-1 text-dark"></i>Opções TikTok Shop</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small">Comissão Afiliados (%)</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.5" class="form-control calc-input" id="afiliado_percentual">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COLUNA DA DIREITA: DASHBOARD DE RESULTADOS LEGÍVEL E CONFORTÁVEL -->
+        <div class="col-lg-5">
+            <div class="resultado-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-uppercase small fw-bold text-white-50">Preço Sugerido de Venda</span>
+                    <span class="badge badge-market px-3 py-1.5" id="badge-canal">Venda Direta</span>
+                </div>
+                <div class="val-destaque mb-2" id="res-preco-venda">R$ 0,00</div>
+                <p class="text-white-50 mb-0 small">Preço sugerido calculado para cobrir custos e atingir a margem desejada.</p>
+            </div>
+
+            <!-- CARD DETALHAMENTO DE CUSTOS -->
+            <div class="card calc-card">
+                <div class="card-header calc-card-header">
+                    <h6 class="mb-0"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Resumo do Custo de Produção</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                            <span><i class="bi bi-disc me-2 text-secondary"></i>Filamento Gasto</span>
+                            <strong class="text-dark" id="res-filamento">R$ 0,00</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                            <span><i class="bi bi-lightning-charge me-2 text-warning"></i>Energia Elétrica</span>
+                            <strong class="text-dark" id="res-energia">R$ 0,00</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                            <span><i class="bi bi-box me-2 text-info"></i>Embalagem</span>
+                            <strong class="text-dark" id="res-embalagem">R$ 0,00</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                            <span><i class="bi bi-tools me-2 text-secondary"></i>Insumos & Mão de Obra</span>
+                            <strong class="text-dark" id="res-insumos-mo">R$ 0,00</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2.5 px-3 bg-light">
+                            <strong class="text-dark">Total Custo de Produção</strong>
+                            <span class="fs-6 fw-bold text-danger" id="res-custo-total">R$ 0,00</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- CARD TAXAS E LUCRO -->
+            <div class="card calc-card">
+                <div class="card-header calc-card-header">
+                    <h6 class="mb-0"><i class="bi bi-cash-coin me-2 text-success"></i>Taxas e Lucro Líquido</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                            <span><i class="bi bi-receipt me-2 text-danger"></i>Taxa / Comissão Marketplace</span>
+                            <strong class="text-danger" id="res-taxas">R$ 0,00</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                            <span><i class="bi bi-percent me-2 text-success"></i>Margem Real Obtida</span>
+                            <strong class="text-success" id="res-margem-real">0.00%</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2.5 px-3 bg-light">
+                            <strong class="text-dark">Lucro Líquido no Bolso</strong>
+                            <span class="fs-5 fw-bold text-success" id="res-lucro-liquido">R$ 0,00</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let selectedMarketplace = 'direto';
+        let dadosUltimoCalculo = null;
+
+        const btnMarkets = document.querySelectorAll('.btn-market');
+        const painelShopee = document.getElementById('painel-shopee');
+        const painelTiktok = document.getElementById('painel-tiktok');
+        const badgeCanal = document.getElementById('badge-canal');
+        const btnSalvarProduto = document.getElementById('btnSalvarProduto');
+
+        // Alternar abas de marketplace
+        btnMarkets.forEach(btn => {
+            btn.addEventListener('click', function () {
+                btnMarkets.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                selectedMarketplace = this.dataset.market;
+                
+                if (selectedMarketplace === 'shopee') {
+                    painelShopee.style.display = 'block';
+                    painelTiktok.style.display = 'none';
+                    badgeCanal.textContent = 'Shopee';
+                } else if (selectedMarketplace === 'tiktok') {
+                    painelShopee.style.display = 'none';
+                    painelTiktok.style.display = 'block';
+                    badgeCanal.textContent = 'TikTok Shop';
+                } else {
+                    painelShopee.style.display = 'none';
+                    painelTiktok.style.display = 'none';
+                    badgeCanal.textContent = 'Venda Direta';
+                }
+
+                executarCalculo();
+            });
+        });
+
+        // Escutar alterações nos campos
+        const inputs = document.querySelectorAll('.calc-input');
+        inputs.forEach(input => {
+            input.addEventListener('input', executarCalculo);
+            input.addEventListener('change', executarCalculo);
+        });
+
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+        }
+
+        function executarCalculo() {
+            const bodyData = {
+                peso_g: parseFloat(document.getElementById('peso_g').value) || 0,
+                valor_kg_filamento: parseFloat(document.getElementById('valor_kg_filamento').value) || 0,
+                horas_impressao: parseFloat(document.getElementById('horas_impressao').value) || 0,
+                potencia_w: parseFloat(document.getElementById('potencia_w').value) || 0,
+                kwh_preco: parseFloat(document.getElementById('kwh_preco').value) || 0,
+                custo_embalagem: parseFloat(document.getElementById('custo_embalagem').value) || 0,
+                custo_insumos: parseFloat(document.getElementById('custo_insumos').value) || 0,
+                custo_mao_de_obra: parseFloat(document.getElementById('custo_mao_de_obra').value) || 0,
+                margem_alvo: parseFloat(document.getElementById('margem_alvo').value) || 0,
+                marketplace: selectedMarketplace,
+                tipo_vendedor: document.getElementById('tipo_vendedor').value,
+                cpf_acima_450: document.getElementById('cpf_acima_450').checked,
+                afiliado_percentual: parseFloat(document.getElementById('afiliado_percentual').value) || 0,
+            };
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch('{% url "calculadora:calcular_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(bodyData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.sucesso) {
+                    dadosUltimoCalculo = data;
+                    document.getElementById('res-preco-venda').textContent = formatarMoeda(data.preco_venda);
+                    document.getElementById('res-filamento').textContent = formatarMoeda(data.custo_producao.filamento);
+                    document.getElementById('res-energia').textContent = formatarMoeda(data.custo_producao.energia);
+                    document.getElementById('res-embalagem').textContent = formatarMoeda(data.custo_producao.embalagem);
+                    
+                    const insumosMo = parseFloat(data.custo_producao.insumos) + parseFloat(data.custo_producao.mao_de_obra);
+                    document.getElementById('res-insumos-mo').textContent = formatarMoeda(insumosMo);
+                    
+                    document.getElementById('res-custo-total').textContent = formatarMoeda(data.custo_producao.total);
+                    document.getElementById('res-taxas').textContent = formatarMoeda(data.taxas_marketplace.total);
+                    document.getElementById('res-lucro-liquido').textContent = formatarMoeda(data.lucro_liquido);
+                    document.getElementById('res-margem-real').textContent = data.margem_real + '%';
+                }
+            })
+            .catch(err => console.error("Erro no cálculo:", err));
+        }
+
+        // Ação do Botão Salvar Produto (Redireciona preenchido para o Cadastro)
+        btnSalvarProduto.addEventListener('click', function () {
+            const nome = document.getElementById('nome_produto').value.trim();
+            if (!nome) {
+                alert("Por favor, preencha o Nome do Produto antes de cadastrar.");
+                document.getElementById('nome_produto').focus();
+                return;
+            }
+
+            const peso_g = document.getElementById('peso_g').value || '';
+            const horas = document.getElementById('horas_impressao').value || '';
+            const valor_kg = document.getElementById('valor_kg_filamento').value || '';
+            const potencia = document.getElementById('potencia_w').value || '';
+            const kwh_preco = document.getElementById('kwh_preco').value || '';
+            const embalagem = document.getElementById('custo_embalagem').value || '';
+            const insumos = document.getElementById('custo_insumos').value || '';
+            const mao_de_obra = document.getElementById('custo_mao_de_obra').value || '';
+            const margem_alvo = document.getElementById('margem_alvo').value || '';
+
+            // Formata horas de impressão para o formato HH:MM:SS
+            let tempoFormatted = '';
+            if (horas) {
+                const totalSec = Math.round(parseFloat(horas) * 3600);
+                const h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+                const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+                const s = String(totalSec % 60).padStart(2, '0');
+                tempoFormatted = `${h}:${m}:${s}`;
+            }
+
+            const params = new URLSearchParams({
+                nome: nome,
+                peso_estimado: peso_g,
+                tempo_estimado: tempoFormatted,
+                valor_kg_filamento: valor_kg,
+                potencia_impressora_w: potencia,
+                custo_kwh_energia: kwh_preco,
+                custo_embalagem: embalagem,
+                custo_insumos: insumos,
+                custo_mao_de_obra: mao_de_obra,
+                marketplace: selectedMarketplace,
+                custo_taxas_marketplace: dadosUltimoCalculo ? dadosUltimoCalculo.taxas_marketplace.total : '',
+                custo_estimado: dadosUltimoCalculo ? dadosUltimoCalculo.custo_producao.total : '',
+                preco_venda: dadosUltimoCalculo ? dadosUltimoCalculo.preco_venda : '',
+                margem_lucro: dadosUltimoCalculo ? dadosUltimoCalculo.margem_real : margem_alvo
+            });
+
+            window.location.href = '{% url "produtos:novo" %}?' + params.toString();
+        });
+    });
+</script>
+{% endblock %}

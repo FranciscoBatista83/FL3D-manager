@@ -25,7 +25,9 @@
                     <tr>
                         <th width="80">Foto</th>
                         <th>Produto</th>
-                        <th>Preço</th>
+                        <th>Custo Base</th>
+                        <th>Preço de Venda</th>
+                        <th>Margem</th>
                         <th>Tempo Estimado</th>
                         <th>Status</th>
                         <th class="text-end">Ações</th>
@@ -36,44 +38,54 @@
                     <tr>
                         <td>
                             {% if produto.foto %}
-                                <img src="{{ produto.foto.url }}" alt="{{ produto.nome }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                            <img src="{{ produto.foto.url }}" alt="{{ produto.nome }}" class="img-thumbnail"
+                                style="width: 50px; height: 50px; object-fit: cover;">
                             {% else %}
-                                <div class="bg-light text-center d-flex align-items-center justify-content-center text-muted border rounded" style="width: 50px; height: 50px;">
-                                    <i class="bi bi-image"></i>
-                                </div>
+                            <div class="bg-light text-center d-flex align-items-center justify-content-center text-muted border rounded"
+                                style="width: 50px; height: 50px;">
+                                <i class="bi bi-image"></i>
+                            </div>
                             {% endif %}
                         </td>
                         <td>
                             <a href="{% url 'produtos:detalhe' produto.pk %}" class="text-decoration-none fw-bold">
                                 {{ produto.nome }}
                             </a>
-                            <div class="small text-muted">{{ produto.codigo|default:"Sem código" }} | Categoria: {{ produto.categoria.nome|default:"-" }}</div>
+                            <div class="small text-muted">{{ produto.codigo|default:"Sem código" }} | Marketplace: {{ produto.get_marketplace_display|default:produto.marketplace|default:"-" }}</div>
+                        </td>
+                        <td class="text-danger">
+                            R$ {{ produto.custo_estimado }}
                         </td>
                         <td class="fw-bold text-success">
                             R$ {{ produto.preco_venda }}
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">{{ produto.margem_lucro|default:"0" }}%</span>
                         </td>
                         <td>
                             {{ produto.tempo_estimado|default:"-" }}
                         </td>
                         <td>
                             {% if produto.ativo %}
-                                <span class="badge bg-success">Ativo</span>
+                            <span class="badge bg-success">Ativo</span>
                             {% else %}
-                                <span class="badge bg-danger">Inativo</span>
+                            <span class="badge bg-danger">Inativo</span>
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            <a href="{% url 'produtos:editar' produto.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                            <a href="{% url 'produtos:editar' produto.pk %}" class="btn btn-sm btn-outline-primary"
+                                title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <a href="{% url 'produtos:excluir' produto.pk %}" class="btn btn-sm btn-outline-danger" title="Excluir">
+                            <a href="{% url 'produtos:excluir' produto.pk %}" class="btn btn-sm btn-outline-danger"
+                                title="Excluir">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
+                        <td colspan="8" class="text-center py-4 text-muted">
                             Nenhum produto encontrado.
                         </td>
                     </tr>
@@ -81,22 +93,26 @@
                 </tbody>
             </table>
         </div>
-        
+
         {% if is_paginated %}
         <nav aria-label="Navegação de página">
             <ul class="pagination justify-content-center mt-4">
                 {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Anterior</a></li>
+                <li class="page-item"><a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Anterior</a>
+                </li>
                 {% else %}
-                    <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
                 {% endif %}
-                
+
                 <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
-                
+
                 {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Próxima</a></li>
+                <li class="page-item"><a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Próxima</a>
+                </li>
                 {% else %}
-                    <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+                <li class="page-item disabled"><span class="page-link">Próxima</span></li>
                 {% endif %}
             </ul>
         </nav>

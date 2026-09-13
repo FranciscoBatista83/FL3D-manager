@@ -10,54 +10,63 @@
 {% endblock %}
 
 {% block content %}
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <h5 class="mb-3 text-primary border-bottom pb-2">Informações Básicas</h5>
-            <div class="row mb-4">
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% comment %}
+    SEÇÃO 1 — IDENTIFICAÇÃO BÁSICA
+    {% endcomment %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-primary">
+                <i class="bi bi-tag me-2"></i>Identificação do Produto
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="{{ form.nome.id_for_label }}" class="form-label">{{ form.nome.label }}</label>
+                    <label for="{{ form.nome.id_for_label }}" class="form-label fw-semibold">{{ form.nome.label }}</label>
                     {{ form.nome }}
                     <div class="text-danger small">{{ form.nome.errors }}</div>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label for="{{ form.codigo.id_for_label }}" class="form-label">{{ form.codigo.label }}</label>
+                    <label for="{{ form.codigo.id_for_label }}" class="form-label fw-semibold">{{ form.codigo.label }}</label>
                     {{ form.codigo }}
                     <div class="text-danger small">{{ form.codigo.errors }}</div>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label for="{{ form.categoria.id_for_label }}" class="form-label">{{ form.categoria.label }}</label>
-                    {{ form.categoria }}
-                    <div class="text-danger small">{{ form.categoria.errors }}</div>
+                    <label for="{{ form.material.id_for_label }}" class="form-label fw-semibold">{{ form.material.label }}</label>
+                    {{ form.material }}
+                    <div class="form-text">Ex: PLA, PETG, ABS, Resina</div>
+                    <div class="text-danger small">{{ form.material.errors }}</div>
                 </div>
                 <div class="col-md-8 mb-3">
-                    <label for="{{ form.descricao.id_for_label }}" class="form-label">{{ form.descricao.label }}</label>
+                    <label for="{{ form.descricao.id_for_label }}" class="form-label fw-semibold">{{ form.descricao.label }}</label>
                     {{ form.descricao }}
                     <div class="text-danger small">{{ form.descricao.errors }}</div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label for="{{ form.foto.id_for_label }}" class="form-label">{{ form.foto.label }}</label>
+                    <label for="{{ form.foto.id_for_label }}" class="form-label fw-semibold">{{ form.foto.label }}</label>
                     {{ form.foto }}
                     <div class="text-danger small">{{ form.foto.errors }}</div>
                 </div>
             </div>
-            
-            <h5 class="mb-3 text-primary border-bottom pb-2">Detalhes Técnicos</h5>
-            <div class="row mb-4">
+        </div>
+    </div>
+
+    {% comment %}
+    SEÇÃO 2 — PARÂMETROS DE IMPRESSÃO 3D
+    {% endcomment %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-primary">
+                <i class="bi bi-printer me-2"></i>Parâmetros de Impressão 3D
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
                 <div class="col-md-3 mb-3">
-                    <label for="{{ form.material.id_for_label }}" class="form-label">{{ form.material.label }}</label>
-                    {{ form.material }}
-                    <div class="text-danger small">{{ form.material.errors }}</div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="{{ form.cor.id_for_label }}" class="form-label">{{ form.cor.label }}</label>
-                    {{ form.cor }}
-                    <div class="text-danger small">{{ form.cor.errors }}</div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="{{ form.peso_estimado.id_for_label }}" class="form-label">{{ form.peso_estimado.label }}</label>
+                    <label for="{{ form.peso_estimado.id_for_label }}" class="form-label fw-semibold">{{ form.peso_estimado.label }}</label>
                     <div class="input-group">
                         {{ form.peso_estimado }}
                         <span class="input-group-text">g</span>
@@ -65,17 +74,114 @@
                     <div class="text-danger small">{{ form.peso_estimado.errors }}</div>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label for="{{ form.tempo_estimado.id_for_label }}" class="form-label">{{ form.tempo_estimado.label }}</label>
+                    <label for="{{ form.tempo_estimado.id_for_label }}" class="form-label fw-semibold">{{ form.tempo_estimado.label }}</label>
                     {{ form.tempo_estimado }}
+                    <div class="form-text">Formato: HH:MM:SS</div>
                     <div class="text-danger small">{{ form.tempo_estimado.errors }}</div>
-                    <small class="text-muted">Formato: HH:MM:SS</small>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.valor_kg_filamento.id_for_label }}" class="form-label fw-semibold">{{ form.valor_kg_filamento.label }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        {{ form.valor_kg_filamento }}
+                    </div>
+                    <div class="text-danger small">{{ form.valor_kg_filamento.errors }}</div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.potencia_impressora_w.id_for_label }}" class="form-label fw-semibold">{{ form.potencia_impressora_w.label }}</label>
+                    <div class="input-group">
+                        {{ form.potencia_impressora_w }}
+                        <span class="input-group-text">W</span>
+                    </div>
+                    <div class="text-danger small">{{ form.potencia_impressora_w.errors }}</div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.custo_kwh_energia.id_for_label }}" class="form-label fw-semibold">{{ form.custo_kwh_energia.label }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        {{ form.custo_kwh_energia }}
+                    </div>
+                    <div class="text-danger small">{{ form.custo_kwh_energia.errors }}</div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <h5 class="mb-3 text-primary border-bottom pb-2">Financeiro</h5>
-            <div class="row mb-4">
+    {% comment %}
+    SEÇÃO 3 — CUSTOS ADICIONAIS
+    {% endcomment %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-primary">
+                <i class="bi bi-receipt me-2"></i>Custos Adicionais
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
                 <div class="col-md-4 mb-3">
-                    <label for="{{ form.custo_estimado.id_for_label }}" class="form-label">{{ form.custo_estimado.label }}</label>
+                    <label for="{{ form.custo_embalagem.id_for_label }}" class="form-label fw-semibold">{{ form.custo_embalagem.label }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        {{ form.custo_embalagem }}
+                    </div>
+                    <div class="text-danger small">{{ form.custo_embalagem.errors }}</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.custo_insumos.id_for_label }}" class="form-label fw-semibold">{{ form.custo_insumos.label }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        {{ form.custo_insumos }}
+                    </div>
+                    <div class="text-danger small">{{ form.custo_insumos.errors }}</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.custo_mao_de_obra.id_for_label }}" class="form-label fw-semibold">{{ form.custo_mao_de_obra.label }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        {{ form.custo_mao_de_obra }}
+                    </div>
+                    <div class="text-danger small">{{ form.custo_mao_de_obra.errors }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% comment %}
+    SEÇÃO 4 — MARKETPLACE E PRECIFICAÇÃO
+    {% endcomment %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-primary">
+                <i class="bi bi-shop me-2"></i>Marketplace e Precificação
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.marketplace.id_for_label }}" class="form-label fw-semibold">{{ form.marketplace.label }}</label>
+                    {{ form.marketplace }}
+                    <div class="form-text">Venda Direta, Shopee, TikTok Shop</div>
+                    <div class="text-danger small">{{ form.marketplace.errors }}</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.custo_taxas_marketplace.id_for_label }}" class="form-label fw-semibold">{{ form.custo_taxas_marketplace.label }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        {{ form.custo_taxas_marketplace }}
+                    </div>
+                    <div class="text-danger small">{{ form.custo_taxas_marketplace.errors }}</div>
+                </div>
+                <div class="col-md-4 mb-3 d-flex align-items-center pt-4">
+                    <div class="alert alert-info mb-0 py-2 px-3 small w-100">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Use a <strong>Calculadora</strong> para calcular automaticamente os valores abaixo.
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.custo_estimado.id_for_label }}" class="form-label fw-semibold">{{ form.custo_estimado.label }}</label>
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
                         {{ form.custo_estimado }}
@@ -83,7 +189,7 @@
                     <div class="text-danger small">{{ form.custo_estimado.errors }}</div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label for="{{ form.preco_venda.id_for_label }}" class="form-label">{{ form.preco_venda.label }}</label>
+                    <label for="{{ form.preco_venda.id_for_label }}" class="form-label fw-semibold">{{ form.preco_venda.label }}</label>
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
                         {{ form.preco_venda }}
@@ -91,7 +197,7 @@
                     <div class="text-danger small">{{ form.preco_venda.errors }}</div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label for="{{ form.margem_lucro.id_for_label }}" class="form-label">{{ form.margem_lucro.label }}</label>
+                    <label for="{{ form.margem_lucro.id_for_label }}" class="form-label fw-semibold">{{ form.margem_lucro.label }}</label>
                     <div class="input-group">
                         {{ form.margem_lucro }}
                         <span class="input-group-text">%</span>
@@ -99,28 +205,29 @@
                     <div class="text-danger small">{{ form.margem_lucro.errors }}</div>
                 </div>
             </div>
-            
-            <h5 class="mb-3 text-primary border-bottom pb-2">Outros</h5>
-            <div class="row mb-4">
-                <div class="col-md-12 mb-3">
-                    <label for="{{ form.observacoes.id_for_label }}" class="form-label">{{ form.observacoes.label }}</label>
-                    {{ form.observacoes }}
-                    <div class="text-danger small">{{ form.observacoes.errors }}</div>
-                </div>
-                <div class="col-md-12 mb-3">
-                    <div class="form-check form-switch">
-                        {{ form.ativo }}
-                        <label class="form-check-label" for="{{ form.ativo.id_for_label }}">Produto Ativo</label>
-                    </div>
-                </div>
+        </div>
+    </div>
+
+    {% comment %}
+    SEÇÃO 5 — STATUS E AÇÕES
+    {% endcomment %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="form-check form-switch">
+                {{ form.ativo }}
+                <label class="form-check-label fw-semibold" for="{{ form.ativo.id_for_label }}">
+                    Produto Ativo
+                </label>
             </div>
-            
-            <div class="mt-4 border-top pt-3 text-end">
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-check-circle"></i> Salvar Produto
+            <div class="d-flex gap-2">
+                <a href="{% url 'produtos:lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </a>
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="bi bi-check-circle me-1"></i>Salvar Produto
                 </button>
             </div>
-        </form>
+        </div>
     </div>
-</div>
+</form>
 {% endblock %}

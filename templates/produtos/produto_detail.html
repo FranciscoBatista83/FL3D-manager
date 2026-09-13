@@ -63,16 +63,12 @@
                         <h6 class="border-bottom pb-2 text-muted">Especificações</h6>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                Categoria
-                                <span class="fw-bold">{{ produto.categoria|default:"-" }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                 Material
                                 <span class="fw-bold">{{ produto.material|default:"-" }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                Cor Sugerida
-                                <span class="fw-bold">{{ produto.cor|default:"-" }}</span>
+                                Marketplace
+                                <span class="fw-bold">{{ produto.marketplace|default:"-" }}</span>
                             </li>
                         </ul>
                     </div>
@@ -101,23 +97,12 @@
                     </div>
                 </div>
                 
-                {% if produto.descricao or produto.observacoes %}
+                {% if produto.descricao %}
                 <div class="row mt-2 border-top pt-3">
-                    {% if produto.descricao %}
                     <div class="col-12 mb-3">
                         <h6 class="text-muted">Descrição</h6>
                         <p>{{ produto.descricao|linebreaks }}</p>
                     </div>
-                    {% endif %}
-                    
-                    {% if produto.observacoes %}
-                    <div class="col-12">
-                        <h6 class="text-muted">Observações Internas</h6>
-                        <div class="bg-light p-3 rounded">
-                            {{ produto.observacoes|linebreaks }}
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
                 {% endif %}
             </div>

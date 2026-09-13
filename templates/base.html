@@ -354,6 +354,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {% if 'calculadora' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'calculadora:index' %}">
+                    <i class="bi bi-calculator"></i> Calculadora
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {% if 'financeiro' in request.resolver_match.app_names %}active{% endif %}"
                    href="{% url 'financeiro:dashboard' %}">
                     <i class="bi bi-cash-stack"></i> Financeiro

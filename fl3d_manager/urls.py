@@ -60,7 +60,10 @@ urlpatterns = [
     # 10. Módulo de Usuários: cadastro, edição e controle de acesso dos operadores
     path('usuarios/', include('usuarios.urls')),
 
-    # 11. Raiz do Sistema ('/'): carrega diretamente o Painel Principal (Dashboard)
+    # 11. Módulo Calculadora: ferramentas de cálculo e custos de impressão 3D
+    path('calculadora/', include('calculadora.urls')),
+
+    # 12. Raiz do Sistema ('/'): carrega diretamente o Painel Principal (Dashboard)
     path('', include('dashboard.urls')),
 ]
 
