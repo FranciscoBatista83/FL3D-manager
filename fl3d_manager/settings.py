@@ -184,7 +184,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # MEDIA: São os arquivos que os usuários e operadores sobem para o sistema
 # (fotos de produtos prontos, modelos 3D, comprovantes financeiros).
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 

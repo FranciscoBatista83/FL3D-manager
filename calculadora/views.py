@@ -24,8 +24,7 @@ def calcular_api(request):
     try:
         data = json.loads(request.body)
         
-        peso_g = Decimal(str(data.get('peso_g', 0) or 0))
-        valor_kg_filamento = Decimal(str(data.get('valor_kg_filamento', 0) or 0))
+        filamentos = data.get('filamentos', [])
         horas_impressao = Decimal(str(data.get('horas_impressao', 0) or 0))
         potencia_w = Decimal(str(data.get('potencia_w', 0) or 0))
         kwh_preco = Decimal(str(data.get('kwh_preco', 0) or 0))
@@ -36,15 +35,12 @@ def calcular_api(request):
         
         margem_alvo = Decimal(str(data.get('margem_alvo', 0) or 0))
         marketplace = str(data.get('marketplace', 'direto'))
-        tipo_vendedor = str(data.get('tipo_vendedor', 'cnpj'))
-        cpf_acima_450 = bool(data.get('cpf_acima_450', False))
         afiliado_percentual = Decimal(str(data.get('afiliado_percentual', 0) or 0))
         preco_venda_manual = Decimal(str(data.get('preco_venda_manual', 0) or 0))
 
         # 1. Custo de Produção
         producao = services.calcular_custo_producao(
-            peso_g=peso_g,
-            valor_kg_filamento=valor_kg_filamento,
+            filamentos=filamentos,
             horas_impressao=horas_impressao,
             potencia_w=potencia_w,
             kwh_preco=kwh_preco,
@@ -61,14 +57,12 @@ def calcular_api(request):
                 custo_producao=producao["total"],
                 margem_alvo=margem_alvo,
                 marketplace=marketplace,
-                tipo_vendedor=tipo_vendedor,
-                cpf_acima_450=cpf_acima_450,
                 afiliado_percentual=afiliado_percentual,
             )
 
         # 3. Comissão e Taxas conforme o Marketplace
         if marketplace == "shopee":
-            comissao_info = services.calcular_comissao_shopee(preco_venda, tipo_vendedor, cpf_acima_450)
+            comissao_info = services.calcular_comissao_shopee(preco_venda)
             taxas_total = comissao_info["total"]
         elif marketplace == "tiktok":
             comissao_info = services.calcular_comissao_tiktok(preco_venda, Decimal("0"), afiliado_percentual)

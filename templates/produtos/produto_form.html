@@ -24,21 +24,15 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-8 mb-3">
                     <label for="{{ form.nome.id_for_label }}" class="form-label fw-semibold">{{ form.nome.label }}</label>
                     {{ form.nome }}
                     <div class="text-danger small">{{ form.nome.errors }}</div>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="{{ form.codigo.id_for_label }}" class="form-label fw-semibold">{{ form.codigo.label }}</label>
                     {{ form.codigo }}
                     <div class="text-danger small">{{ form.codigo.errors }}</div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="{{ form.material.id_for_label }}" class="form-label fw-semibold">{{ form.material.label }}</label>
-                    {{ form.material }}
-                    <div class="form-text">Ex: PLA, PETG, ABS, Resina</div>
-                    <div class="text-danger small">{{ form.material.errors }}</div>
                 </div>
                 <div class="col-md-8 mb-3">
                     <label for="{{ form.descricao.id_for_label }}" class="form-label fw-semibold">{{ form.descricao.label }}</label>
@@ -46,26 +40,33 @@
                     <div class="text-danger small">{{ form.descricao.errors }}</div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label for="{{ form.foto.id_for_label }}" class="form-label fw-semibold">{{ form.foto.label }}</label>
-                    {{ form.foto }}
-                    <div class="text-danger small">{{ form.foto.errors }}</div>
+                    <div class="mb-3">
+                        <label for="{{ form.foto.id_for_label }}" class="form-label fw-semibold">{{ form.foto.label }}</label>
+                        {{ form.foto }}
+                        <div class="text-danger small">{{ form.foto.errors }}</div>
+                    </div>
+                    <div>
+                        <label for="{{ form.arquivo_impressao.id_for_label }}" class="form-label fw-semibold">{{ form.arquivo_impressao.label }}</label>
+                        {{ form.arquivo_impressao }}
+                        <div class="text-danger small">{{ form.arquivo_impressao.errors }}</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     {% comment %}
-    SEÇÃO 2 — PARÂMETROS DE IMPRESSÃO 3D
+    SEÇÃO 2 — MATERIAL (FILAMENTOS)
     {% endcomment %}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white py-3">
             <h6 class="m-0 fw-bold text-primary">
-                <i class="bi bi-printer me-2"></i>Parâmetros de Impressão 3D
+                <i class="bi bi-box-seam me-2"></i>Consumo de Material
             </h6>
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-3 mb-3">
+                <div class="col-md-6 mb-3">
                     <label for="{{ form.peso_estimado.id_for_label }}" class="form-label fw-semibold">{{ form.peso_estimado.label }}</label>
                     <div class="input-group">
                         {{ form.peso_estimado }}
@@ -73,21 +74,42 @@
                     </div>
                     <div class="text-danger small">{{ form.peso_estimado.errors }}</div>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Filamentos Utilizados</label>
+                    <div id="materiais-container" class="mb-2">
+                        <!-- Linhas injetadas via JS -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-material-btn">
+                        <i class="bi bi-plus-circle me-1"></i>Adicionar Material
+                    </button>
+                    <!-- Esconde os campos originais -->
+                    <div class="d-none">
+                        {{ form.detalhes_filamentos }}
+                    </div>
+                    <div class="text-danger small">{{ form.detalhes_filamentos.errors }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% comment %}
+    SEÇÃO 3 — ENERGIA ELÉTRICA
+    {% endcomment %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-primary">
+                <i class="bi bi-lightning-charge me-2"></i>Consumo de Energia
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
                     <label for="{{ form.tempo_estimado.id_for_label }}" class="form-label fw-semibold">{{ form.tempo_estimado.label }}</label>
                     {{ form.tempo_estimado }}
                     <div class="form-text">Formato: HH:MM:SS</div>
                     <div class="text-danger small">{{ form.tempo_estimado.errors }}</div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label for="{{ form.valor_kg_filamento.id_for_label }}" class="form-label fw-semibold">{{ form.valor_kg_filamento.label }}</label>
-                    <div class="input-group">
-                        <span class="input-group-text">R$</span>
-                        {{ form.valor_kg_filamento }}
-                    </div>
-                    <div class="text-danger small">{{ form.valor_kg_filamento.errors }}</div>
-                </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="{{ form.potencia_impressora_w.id_for_label }}" class="form-label fw-semibold">{{ form.potencia_impressora_w.label }}</label>
                     <div class="input-group">
                         {{ form.potencia_impressora_w }}
@@ -95,7 +117,7 @@
                     </div>
                     <div class="text-danger small">{{ form.potencia_impressora_w.errors }}</div>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="{{ form.custo_kwh_energia.id_for_label }}" class="form-label fw-semibold">{{ form.custo_kwh_energia.label }}</label>
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
@@ -230,4 +252,87 @@
         </div>
     </div>
 </form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const detalhesInput = document.getElementById("id_detalhes_filamentos");
+        const container = document.getElementById("materiais-container");
+        const btnAdd = document.getElementById("add-material-btn");
+        const form = document.querySelector("form");
+        const pesoEstimadoInput = document.getElementById("id_peso_estimado");
+
+        function atualizarPesoTotal() {
+            let pesoTotal = 0;
+            container.querySelectorAll(".input-peso").forEach(input => {
+                pesoTotal += parseFloat(input.value) || 0;
+            });
+            if (pesoEstimadoInput) {
+                // Formata com ponto para o input number
+                pesoEstimadoInput.value = pesoTotal.toFixed(2);
+            }
+        }
+
+        function criarLinha(peso, valor) {
+            const row = document.createElement("div");
+            row.className = "row g-2 mb-2 filamento-item align-items-end";
+            row.innerHTML = `
+                <div class="col-md-5">
+                    <label class="form-label small mb-1 text-muted">Peso (g)</label>
+                    <input type="number" step="0.01" class="form-control form-control-sm input-peso" value="${peso}">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label small mb-1 text-muted">Preço/kg (R$)</label>
+                    <input type="number" step="0.01" class="form-control form-control-sm input-valor" value="${valor}">
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-remover" title="Remover">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Eventos para recalcular peso ao digitar e remover linha
+            row.querySelector('.input-peso').addEventListener('input', atualizarPesoTotal);
+            row.querySelector('.btn-remover').addEventListener('click', function() {
+                row.remove();
+                atualizarPesoTotal();
+            });
+
+            container.appendChild(row);
+        }
+
+        // Inicializar com os dados do Django
+        if (detalhesInput && detalhesInput.value) {
+            try {
+                let val = detalhesInput.value.replace(/'/g, '"');
+                const filamentos = JSON.parse(val);
+                if (Array.isArray(filamentos) && filamentos.length > 0) {
+                    filamentos.forEach(f => criarLinha(f.peso_g, f.valor_kg));
+                } else {
+                    criarLinha(0, 0); // fallback
+                }
+            } catch (e) {
+                console.error("Erro ao fazer parse dos filamentos", e);
+                criarLinha(0, 0);
+            }
+        } else {
+            criarLinha(0, 0);
+        }
+
+        btnAdd.addEventListener("click", function() {
+            criarLinha(0, 0);
+        });
+
+        // Antes de enviar o formulário, remontar o JSON
+        form.addEventListener("submit", function() {
+            const filamentos = [];
+            container.querySelectorAll(".filamento-item").forEach(item => {
+                const p = parseFloat(item.querySelector(".input-peso").value) || 0;
+                const v = parseFloat(item.querySelector(".input-valor").value) || 0;
+                filamentos.push({ peso_g: p, valor_kg: v });
+            });
+            detalhesInput.value = JSON.stringify(filamentos);
+        });
+    });
+</script>
 {% endblock %}

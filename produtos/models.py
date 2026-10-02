@@ -24,6 +24,7 @@ class Produto(models.Model):
     codigo = models.CharField('Código / SKU', max_length=50, unique=True, blank=True, null=True, help_text='Código SKU único interno')
     descricao = models.TextField('Descrição e Especificações', blank=True, null=True)
     foto = models.ImageField('Foto do Produto', upload_to='produtos/', blank=True, null=True)
+    arquivo_impressao = models.FileField('Arquivo de Impressão', upload_to='arquivos_impressao/', blank=True, null=True, help_text='Ex: .gcode, .stl, .3mf')
     material = models.CharField('Material (Filamento)', max_length=100, blank=True, null=True, help_text='Ex: PLA, PETG, ABS, Resina')
 
     # -------------------------------------------------------------------------
@@ -33,6 +34,7 @@ class Produto(models.Model):
     tempo_estimado = models.DurationField('Tempo de Impressão', blank=True, null=True, help_text='Duração (HH:MM:SS)')
 
     valor_kg_filamento = models.DecimalField('Preço do Filamento (R$/kg)', max_digits=10, decimal_places=2, default=0.00)
+    detalhes_filamentos = models.JSONField('Detalhes dos Filamentos', default=list, blank=True)
     potencia_impressora_w = models.DecimalField('Potência da Impressora (W)', max_digits=8, decimal_places=2, default=150.00)
     custo_kwh_energia = models.DecimalField('Tarifa de Energia (R$/kWh)', max_digits=8, decimal_places=2, default=0.85)
 

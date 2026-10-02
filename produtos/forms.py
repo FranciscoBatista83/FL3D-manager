@@ -16,10 +16,10 @@ class ProdutoForm(forms.ModelForm):
         model = Produto
         fields = [
             # Identificação
-            'nome', 'codigo', 'descricao', 'foto', 'material',
+            'nome', 'codigo', 'descricao', 'foto', 'arquivo_impressao',
             # Parâmetros de impressão e custos
             'peso_estimado', 'tempo_estimado',
-            'valor_kg_filamento', 'potencia_impressora_w', 'custo_kwh_energia',
+            'detalhes_filamentos', 'potencia_impressora_w', 'custo_kwh_energia',
             'custo_embalagem', 'custo_insumos', 'custo_mao_de_obra',
             # Marketplace e precificação
             'marketplace', 'custo_taxas_marketplace',
@@ -37,6 +37,6 @@ class ProdutoForm(forms.ModelForm):
             else:
                 field.widget.attrs['class'] = 'form-control'
             
-            if is_new and field_name not in ['ativo', 'foto']:
+            if is_new and field_name not in ['ativo', 'foto', 'arquivo_impressao']:
                 if field_name not in self.initial or self.initial.get(field_name) is None:
                     field.initial = None

@@ -13,7 +13,8 @@ Controla todas as telas do catálogo de produtos da FL3D Studio:
 =============================================================================
 """
 
-from django.shortcuts import render, redirect
+import os
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -61,7 +62,7 @@ class ProdutoCreateView(LoginRequiredMixin, CreateView):
         initial = super().get_initial()
         fields_to_transfer = [
             'nome', 'peso_estimado', 'tempo_estimado',
-            'valor_kg_filamento', 'potencia_impressora_w', 'custo_kwh_energia',
+            'valor_kg_filamento', 'detalhes_filamentos', 'potencia_impressora_w', 'custo_kwh_energia',
             'custo_embalagem', 'custo_insumos', 'custo_mao_de_obra',
             'marketplace', 'custo_taxas_marketplace',
             'custo_estimado', 'preco_venda', 'margem_lucro'
@@ -69,6 +70,12 @@ class ProdutoCreateView(LoginRequiredMixin, CreateView):
         for field in fields_to_transfer:
             val = self.request.GET.get(field)
             if val is not None and val != '':
+                if field == 'detalhes_filamentos':
+                    import json
+                    try:
+                        val = json.loads(val)
+                    except json.JSONDecodeError:
+                        pass
                 initial[field] = val
         return initial
 
@@ -126,3 +133,44 @@ class ProdutoDeleteView(LoginRequiredMixin, DeleteView):
         messages.success(self.request, 'Produto inativado com sucesso!')
         return redirect(self.success_url)
 
+
+
+class ProdutoHardDeleteView(LoginRequiredMixin, DeleteView):
+    """
+    Exclusão definitiva e irreversível do produto do banco de dados.
+    Requer confirmação dupla via POST com campo de texto 'EXCLUIR'.
+    """
+    model = Produto
+    success_url = reverse_lazy('produtos:lista')
+
+    def post(self, request, *args, **kwargs):
+        confirmacao = request.POST.get('confirmacao', '')
+        if confirmacao != 'EXCLUIR':
+            messages.error(request, 'Confirmação inválida. Digite exatamente "EXCLUIR" para confirmar.')
+            return redirect('produtos:lista')
+        produto = self.get_object()
+        nome = produto.nome
+        produto.delete()
+        messages.success(request, f'Produto "{nome}" excluído definitivamente do sistema.')
+        return redirect(self.success_url)
+
+
+def abrir_arquivo_impressao(request, pk):
+    """
+    Abre o arquivo de impressao do produto com o programa padrao do Windows
+    (ex: BambuStudio para .3mf, Notepad para .gcode, etc).
+    Funciona pois o servidor Django roda localmente na maquina do usuario.
+    """
+    import subprocess
+    from .models import Produto
+    produto = get_object_or_404(Produto, pk=pk)
+    if produto.arquivo_impressao:
+        caminho = produto.arquivo_impressao.path
+        try:
+            subprocess.Popen(['cmd', '/c', 'start', '', caminho], shell=False)
+            messages.success(request, 'Arquivo aberto com sucesso!')
+        except Exception as e:
+            messages.error(request, f'Nao foi possivel abrir o arquivo: {e}')
+    else:
+        messages.warning(request, 'Este produto nao possui arquivo de impressao cadastrado.')
+    return redirect('produtos:detalhe', pk=pk)

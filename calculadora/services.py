@@ -14,38 +14,44 @@ def quantize(value: Decimal) -> Decimal:
 
 
 # =============================================================================
-# REGRAS SHOPEE
+# REGRAS SHOPEE — Vendedores CNPJ (vigência: 01/10/2026)
+# Tabela de comissão por faixa de preço:
+#   Até R$ 79,99          → 20% + R$ 4,50
+#   R$ 80,00 a R$ 99,99   → 14% + R$ 16,00
+#   R$ 100,00 a R$ 199,99 → 14% + R$ 20,00
+#   R$ 200,00 a R$ 499,99 → 14% + R$ 26,00
+#   Acima de R$ 500,00    → 14% + R$ 26,00
+# Nota: O Subsídio Pix (5%-8%) é oferecido pela Shopee ao comprador e
+#        não afeta o valor líquido recebido pelo vendedor.
 # =============================================================================
-def calcular_comissao_shopee(preco_venda: Decimal, tipo_vendedor: str = "cnpj", cpf_acima_450: bool = False) -> dict:
+def calcular_comissao_shopee(preco_venda: Decimal) -> dict:
     """
-    Calcula comissão Shopee:
-    - Padrão: 14% (ou 20% com Frete Grátis)
-    - Limite máximo de comissão por item: R$ 100,00
-    - Taxa fixa por item: R$ 4,00
-    - CPF com > 450 pedidos nos últimos 90 dias: +R$ 5,00 por item
+    Calcula a comissão Shopee para vendedores CNPJ com base na faixa de preço do item.
+    Regras vigentes a partir de 01/10/2026.
     """
     preco = quantize(preco_venda)
-    
-    # Define percentual da comissão baseada no tipo de frete / programa
-    # Aqui consideramos o programa padrão de comissão Shopee (14% com limite R$100 + R$4 taxa)
-    taxa_percentual = Decimal("0.14")
-    if tipo_vendedor == "frete_gratis":
+
+    if preco <= Decimal("79.99"):
         taxa_percentual = Decimal("0.20")
+        taxa_fixa = Decimal("4.50")
+    elif preco <= Decimal("99.99"):
+        taxa_percentual = Decimal("0.14")
+        taxa_fixa = Decimal("16.00")
+    elif preco <= Decimal("199.99"):
+        taxa_percentual = Decimal("0.14")
+        taxa_fixa = Decimal("20.00")
+    else:
+        # R$ 200,00 a R$ 499,99 e acima de R$ 500,00 — mesma estrutura
+        taxa_percentual = Decimal("0.14")
+        taxa_fixa = Decimal("26.00")
 
     comissao_percentual = quantize(preco * taxa_percentual)
-    if comissao_percentual > Decimal("100.00"):
-        comissao_percentual = Decimal("100.00")
-
-    taxa_fixa = Decimal("4.00")
-    adicional_cpf = Decimal("5.00") if (tipo_vendedor == "cpf" and cpf_acima_450) else Decimal("0.00")
-
-    total = comissao_percentual + taxa_fixa + adicional_cpf
+    total = comissao_percentual + taxa_fixa
 
     return {
         "percentual": taxa_percentual * Decimal("100"),
         "comissao_percentual_valor": comissao_percentual,
         "taxa_fixa": taxa_fixa,
-        "adicional_cpf": adicional_cpf,
         "total": quantize(total)
     }
 
@@ -85,8 +91,7 @@ def calcular_comissao_tiktok(preco_venda: Decimal, desconto_vendedor: Decimal = 
 # CUSTO DE PRODUÇÃO
 # =============================================================================
 def calcular_custo_producao(
-    peso_g: Decimal,
-    valor_kg_filamento: Decimal,
+    filamentos: list,
     horas_impressao: Decimal,
     potencia_w: Decimal,
     kwh_preco: Decimal,
@@ -95,7 +100,13 @@ def calcular_custo_producao(
     custo_mao_de_obra: Decimal = Decimal("0")
 ) -> dict:
     """Calcula os custos diretos de fabricação da peça em impressão 3D."""
-    filamento = quantize((Decimal(str(peso_g)) / Decimal("1000")) * Decimal(str(valor_kg_filamento)))
+    custo_filamento = Decimal("0")
+    for f in filamentos:
+        peso = Decimal(str(f.get('peso_g', 0) or 0))
+        valor_kg = Decimal(str(f.get('valor_kg', 0) or 0))
+        custo_filamento += (peso / Decimal("1000")) * valor_kg
+        
+    filamento = quantize(custo_filamento)
     energia = quantize((Decimal(str(potencia_w)) / Decimal("1000")) * Decimal(str(horas_impressao)) * Decimal(str(kwh_preco)))
     embalagem = quantize(custo_embalagem)
     insumos = quantize(custo_insumos)
@@ -120,8 +131,6 @@ def calcular_preco_sugerido(
     custo_producao: Decimal,
     margem_alvo: Decimal,
     marketplace: str = "direto",
-    tipo_vendedor: str = "cnpj",
-    cpf_acima_450: bool = False,
     afiliado_percentual: Decimal = Decimal("0")
 ) -> Decimal:
     """Calcula o preço sugerido de venda para atingir a margem de lucro desejada."""
@@ -138,7 +147,7 @@ def calcular_preco_sugerido(
 
     for _ in range(25):
         if marketplace == "shopee":
-            comissao = calcular_comissao_shopee(preco, tipo_vendedor, cpf_acima_450)
+            comissao = calcular_comissao_shopee(preco)
             custo_taxa = comissao["total"]
         elif marketplace == "tiktok":
             comissao = calcular_comissao_tiktok(preco, Decimal("0"), afiliado_percentual)

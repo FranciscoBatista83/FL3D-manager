@@ -77,10 +77,16 @@
                                 title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <a href="{% url 'produtos:excluir' produto.pk %}" class="btn btn-sm btn-outline-danger"
-                                title="Excluir">
-                                <i class="bi bi-trash"></i>
+                            <a href="{% url 'produtos:excluir' produto.pk %}" class="btn btn-sm btn-outline-warning"
+                                title="Inativar produto">
+                                <i class="bi bi-slash-circle"></i>
                             </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-hard-delete"
+                                title="Excluir definitivamente"
+                                data-pk="{{ produto.pk }}"
+                                data-nome="{{ produto.nome }}">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
                         </td>
                     </tr>
                     {% empty %}
@@ -119,4 +125,69 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Modal de Exclusão Definitiva -->
+<div class="modal fade" id="modalExcluirDefinitivo" tabindex="-1" aria-labelledby="modalExcluirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalExcluirLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Exclusão Definitiva
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <strong>Atenção!</strong> Esta ação é <strong>irreversível</strong>. O produto será removido permanentemente do sistema.
+                </div>
+                <p>Você está prestes a excluir definitivamente:</p>
+                <p class="fw-bold fs-5" id="modal-produto-nome"></p>
+                <hr>
+                <label class="form-label">Para confirmar, digite <strong class="text-danger">EXCLUIR</strong> abaixo:</label>
+                <input type="text" id="input-confirmacao" class="form-control" placeholder="Digite EXCLUIR">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" id="form-hard-delete">
+                    {% csrf_token %}
+                    <input type="hidden" name="confirmacao" id="hidden-confirmacao">
+                    <button type="submit" id="btn-confirmar-exclusao" class="btn btn-danger" disabled>
+                        <i class="bi bi-trash3-fill me-1"></i>Excluir Definitivamente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = new bootstrap.Modal(document.getElementById('modalExcluirDefinitivo'));
+        const inputConf = document.getElementById('input-confirmacao');
+        const btnConfirmar = document.getElementById('btn-confirmar-exclusao');
+        const formDelete = document.getElementById('form-hard-delete');
+        const hiddenConf = document.getElementById('hidden-confirmacao');
+        const nomeEl = document.getElementById('modal-produto-nome');
+
+        document.querySelectorAll('.btn-hard-delete').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const pk = this.dataset.pk;
+                const nome = this.dataset.nome;
+                nomeEl.textContent = nome;
+                formDelete.action = '/produtos/' + pk + '/excluir-definitivo/';
+                inputConf.value = '';
+                btnConfirmar.disabled = true;
+                modal.show();
+            });
+        });
+
+        inputConf.addEventListener('input', function() {
+            const val = this.value;
+            btnConfirmar.disabled = (val !== 'EXCLUIR');
+            hiddenConf.value = val;
+        });
+    });
+</script>
 {% endblock %}

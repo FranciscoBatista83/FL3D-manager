@@ -1,4 +1,4 @@
-﻿"""
+"""
 =============================================================================
 FL3D Manager - Roteamento do Módulo de Produtos (urls.py)
 =============================================================================
@@ -31,7 +31,13 @@ urlpatterns = [
     # Edição de dados do produto
     path('<int:pk>/editar/', views.ProdutoUpdateView.as_view(), name='editar'),
     
-    # Inativação do produto
+    # Inativação do produto (Soft Delete)
     path('<int:pk>/excluir/', views.ProdutoDeleteView.as_view(), name='excluir'),
+
+    # Exclusão definitiva do produto (Hard Delete)
+    path('<int:pk>/excluir-definitivo/', views.ProdutoHardDeleteView.as_view(), name='excluir_definitivo'),
+
+    # Abre o arquivo de impressão com o programa padrão do Windows
+    path('<int:pk>/abrir-arquivo/', views.abrir_arquivo_impressao, name='abrir_arquivo'),
 ]
 
