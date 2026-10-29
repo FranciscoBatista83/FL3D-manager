@@ -12,6 +12,22 @@ alinhadas com a Calculadora de Precificação.
 from django.db import models
 
 
+class Categoria(models.Model):
+    """
+    Categoria de produtos 3D (ex: Vasos, Decoração, Utilitários, Brindes, Action Figures).
+    """
+    nome = models.CharField('Nome da Categoria', max_length=100, unique=True)
+    descricao = models.TextField('Descrição', blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Categoria'
+        verbose_name_plural = 'Categorias'
+        ordering = ['nome']
+
+    def __str__(self):
+        return self.nome
+
+
 class Produto(models.Model):
     """
     Ficha do Produto 3D. Guarda dados comerciais e métricas técnicas
@@ -21,6 +37,14 @@ class Produto(models.Model):
     # IDENTIFICAÇÃO BÁSICA E SKU
     # -------------------------------------------------------------------------
     nome = models.CharField('Nome do Produto', max_length=200)
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='produtos',
+        verbose_name='Categoria'
+    )
     codigo = models.CharField('Código / SKU', max_length=50, unique=True, blank=True, null=True, help_text='Código SKU único interno')
     descricao = models.TextField('Descrição e Especificações', blank=True, null=True)
     foto = models.ImageField('Foto do Produto', upload_to='produtos/', blank=True, null=True)
@@ -46,6 +70,7 @@ class Produto(models.Model):
     # MARKETPLACE E FORMAÇÃO DE PREÇO
     # -------------------------------------------------------------------------
     marketplace = models.CharField('Marketplace Padrão', max_length=50, default='direto', help_text='Venda Direta, Shopee, TikTok Shop')
+    comissao_afiliado_percentual = models.DecimalField('Comissão de Afiliados (%)', max_digits=5, decimal_places=2, default=0.00, help_text='Percentual de comissão de afiliado (Shopee/TikTok)')
     custo_taxas_marketplace = models.DecimalField('Taxas do Marketplace (R$)', max_digits=10, decimal_places=2, default=0.00)
 
     custo_estimado = models.DecimalField('Custo Total de Produção (R$)', max_digits=10, decimal_places=2, default=0.00)

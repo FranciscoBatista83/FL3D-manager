@@ -39,5 +39,10 @@ urlpatterns = [
 
     # Abre o arquivo de impressão com o programa padrão do Windows
     path('<int:pk>/abrir-arquivo/', views.abrir_arquivo_impressao, name='abrir_arquivo'),
+
+    # Gerenciamento de categorias via AJAX
+    path('api/categorias/', views.listar_categorias_api, name='listar_categorias_api'),
+    path('api/categorias/criar/', views.criar_categoria_api, name='criar_categoria_api'),
+    path('api/categorias/<int:pk>/excluir/', views.excluir_categoria_api, name='excluir_categoria_api'),
 ]
 

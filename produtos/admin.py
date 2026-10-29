@@ -9,7 +9,13 @@ produtos com filtros por material, marketplace e status ativo.
 """
 
 from django.contrib import admin
-from .models import Produto
+from .models import Produto, Categoria
+
+
+@admin.register(Categoria)
+class CategoriaAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'descricao')
+    search_fields = ('nome',)
 
 
 @admin.register(Produto)
@@ -17,7 +23,7 @@ class ProdutoAdmin(admin.ModelAdmin):
     """
     Configuração dos Produtos no painel administrativo.
     """
-    list_display = ('nome', 'codigo', 'material', 'marketplace', 'preco_venda', 'custo_estimado', 'margem_lucro', 'ativo')
-    list_filter = ('ativo', 'material', 'marketplace')
+    list_display = ('nome', 'categoria', 'codigo', 'material', 'marketplace', 'preco_venda', 'custo_estimado', 'margem_lucro', 'ativo')
+    list_filter = ('ativo', 'categoria', 'material', 'marketplace')
     search_fields = ('nome', 'codigo', 'descricao')
     list_per_page = 20

@@ -16,22 +16,27 @@ def quantize(value: Decimal) -> Decimal:
 # =============================================================================
 # REGRAS SHOPEE — Vendedores CNPJ (vigência: 01/10/2026)
 # Tabela de comissão por faixa de preço:
-#   Até R$ 79,99          → 20% + R$ 4,50
+#   Abaixo de R$ 9,00     → 20% + 50% do preço do item (taxa fixa reduzida)
+#   R$ 9,00 a R$ 79,99    → 20% + R$ 4,50
 #   R$ 80,00 a R$ 99,99   → 14% + R$ 16,00
 #   R$ 100,00 a R$ 199,99 → 14% + R$ 20,00
-#   R$ 200,00 a R$ 499,99 → 14% + R$ 26,00
-#   Acima de R$ 500,00    → 14% + R$ 26,00
+#   Acima de R$ 200,00    → 14% + R$ 26,00
 # Nota: O Subsídio Pix (5%-8%) é oferecido pela Shopee ao comprador e
 #        não afeta o valor líquido recebido pelo vendedor.
 # =============================================================================
-def calcular_comissao_shopee(preco_venda: Decimal) -> dict:
+def calcular_comissao_shopee(preco_venda: Decimal, afiliado_percentual: Decimal = Decimal("0")) -> dict:
     """
-    Calcula a comissão Shopee para vendedores CNPJ com base na faixa de preço do item.
+    Calcula a comissão Shopee para vendedores CNPJ com base na faixa de preço do item
+    e inclui opcionalmente comissão para afiliados.
     Regras vigentes a partir de 01/10/2026.
     """
     preco = quantize(preco_venda)
+    afiliado_pct = quantize(afiliado_percentual)
 
-    if preco <= Decimal("79.99"):
+    if preco < Decimal("9.00"):
+        taxa_percentual = Decimal("0.20")
+        taxa_fixa = quantize(preco * Decimal("0.50"))  # 50% do preço do item
+    elif preco <= Decimal("79.99"):
         taxa_percentual = Decimal("0.20")
         taxa_fixa = Decimal("4.50")
     elif preco <= Decimal("99.99"):
@@ -46,12 +51,14 @@ def calcular_comissao_shopee(preco_venda: Decimal) -> dict:
         taxa_fixa = Decimal("26.00")
 
     comissao_percentual = quantize(preco * taxa_percentual)
-    total = comissao_percentual + taxa_fixa
+    comissao_afiliado = quantize(preco * (afiliado_pct / Decimal("100")))
+    total = comissao_percentual + taxa_fixa + comissao_afiliado
 
     return {
         "percentual": taxa_percentual * Decimal("100"),
         "comissao_percentual_valor": comissao_percentual,
         "taxa_fixa": taxa_fixa,
+        "comissao_afiliado": comissao_afiliado,
         "total": quantize(total)
     }
 
@@ -147,7 +154,7 @@ def calcular_preco_sugerido(
 
     for _ in range(25):
         if marketplace == "shopee":
-            comissao = calcular_comissao_shopee(preco)
+            comissao = calcular_comissao_shopee(preco, afiliado_percentual)
             custo_taxa = comissao["total"]
         elif marketplace == "tiktok":
             comissao = calcular_comissao_tiktok(preco, Decimal("0"), afiliado_percentual)

@@ -1,19 +1,65 @@
 from decimal import Decimal
 from datetime import timedelta
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 import json
 
 from . import services
-from produtos.models import Produto
+from produtos.models import Produto, Categoria
 
 
 def index(request):
     """
     Renderiza a interface da Calculadora de Precificação do FL3D Manager.
+    Pode receber 'produto_id' via GET para carregar os dados de uma peça já cadastrada.
     """
-    return render(request, 'calculadora/index.html')
+    produto = None
+    horas_impressao = None
+    dados_produto = None
+    categorias = Categoria.objects.all()
+    produto_id = request.GET.get('produto_id')
+    if produto_id:
+        try:
+            produto = get_object_or_404(Produto, pk=produto_id)
+            if produto.tempo_estimado:
+                total_seg = produto.tempo_estimado.total_seconds()
+                horas_impressao = round(total_seg / 3600, 2)
+
+            filamentos_lista = produto.detalhes_filamentos or []
+            if not filamentos_lista and produto.peso_estimado:
+                filamentos_lista = [{
+                    'peso_g': float(produto.peso_estimado),
+                    'valor_kg': float(produto.valor_kg_filamento or 0)
+                }]
+
+            dados_produto = {
+                'id': produto.id,
+                'nome': produto.nome or '',
+                'categoria_id': produto.categoria_id or '',
+                'horas_impressao': horas_impressao if horas_impressao is not None else '',
+                'potencia_w': float(produto.potencia_impressora_w or 150),
+                'kwh_preco': float(produto.custo_kwh_energia or 0.85),
+                'custo_embalagem': float(produto.custo_embalagem or 0),
+                'custo_insumos': float(produto.custo_insumos or 0),
+                'custo_mao_de_obra': float(produto.custo_mao_de_obra or 0),
+                'margem_alvo': float(produto.margem_lucro or 40),
+                'marketplace': produto.marketplace or 'direto',
+                'comissao_afiliado_percentual': float(produto.comissao_afiliado_percentual or 0),
+                'filamentos': filamentos_lista,
+            }
+        except Exception:
+            produto = None
+            dados_produto = None
+
+    context = {
+        'produto': produto,
+        'horas_impressao': horas_impressao,
+        'categorias': categorias,
+        'dados_produto_json': json.dumps(dados_produto) if dados_produto else 'null',
+    }
+    return render(request, 'calculadora/index.html', context)
 
 
 @require_http_methods(["POST"])
@@ -62,7 +108,7 @@ def calcular_api(request):
 
         # 3. Comissão e Taxas conforme o Marketplace
         if marketplace == "shopee":
-            comissao_info = services.calcular_comissao_shopee(preco_venda)
+            comissao_info = services.calcular_comissao_shopee(preco_venda, afiliado_percentual)
             taxas_total = comissao_info["total"]
         elif marketplace == "tiktok":
             comissao_info = services.calcular_comissao_tiktok(preco_venda, Decimal("0"), afiliado_percentual)
@@ -101,7 +147,9 @@ def calcular_api(request):
 @require_http_methods(["POST"])
 def salvar_produto_api(request):
     """
-    Endpoint AJAX para salvar a peça orçada como um novo Produto no catálogo.
+    Endpoint AJAX para salvar a peça orçada:
+    - Se informado 'produto_id', atualiza o produto existente.
+    - Caso contrário, cria um novo Produto no catálogo.
     """
     try:
         data = json.loads(request.body)
@@ -110,31 +158,83 @@ def salvar_produto_api(request):
         if not nome:
             return JsonResponse({'sucesso': False, 'erro': 'Por favor, informe o Nome do Produto.'}, status=400)
 
+        produto_id = data.get('produto_id')
+        categoria_id = data.get('categoria_id')
+        categoria = Categoria.objects.filter(pk=categoria_id).first() if categoria_id else None
+
         peso_g = Decimal(str(data.get('peso_g', 0) or 0))
         horas_impressao = float(data.get('horas_impressao', 0) or 0)
         custo_total = Decimal(str(data.get('custo_total', 0) or 0))
         preco_venda = Decimal(str(data.get('preco_venda', 0) or 0))
         margem_lucro = Decimal(str(data.get('margem_lucro', 0) or 0))
+        marketplace = str(data.get('marketplace', 'direto'))
+        afiliado_percentual = Decimal(str(data.get('afiliado_percentual', 0) or 0))
+        detalhes_filamentos = data.get('detalhes_filamentos', [])
+
+        potencia_w = Decimal(str(data.get('potencia_w', 150) or 150))
+        kwh_preco = Decimal(str(data.get('kwh_preco', 0.85) or 0.85))
+        custo_embalagem = Decimal(str(data.get('custo_embalagem', 0) or 0))
+        custo_insumos = Decimal(str(data.get('custo_insumos', 0) or 0))
+        custo_mao_de_obra = Decimal(str(data.get('custo_mao_de_obra', 0) or 0))
+        custo_taxas_marketplace = Decimal(str(data.get('custo_taxas_marketplace', 0) or 0))
 
         # Converte horas float em DurationField (timedelta)
         tempo_estimado = timedelta(hours=horas_impressao) if horas_impressao > 0 else None
 
-        # Cria o Produto no Banco de Dados
-        produto = Produto.objects.create(
-            nome=nome,
-            peso_estimado=peso_g,
-            tempo_estimado=tempo_estimado,
-            custo_estimado=custo_total,
-            preco_venda=preco_venda,
-            margem_lucro=margem_lucro,
-            ativo=True
-        )
+        if produto_id:
+            produto = get_object_or_404(Produto, pk=produto_id)
+            produto.nome = nome
+            produto.categoria = categoria
+            produto.peso_estimado = peso_g
+            produto.tempo_estimado = tempo_estimado
+            produto.detalhes_filamentos = detalhes_filamentos
+            produto.potencia_impressora_w = potencia_w
+            produto.custo_kwh_energia = kwh_preco
+            produto.custo_embalagem = custo_embalagem
+            produto.custo_insumos = custo_insumos
+            produto.custo_mao_de_obra = custo_mao_de_obra
+            produto.marketplace = marketplace
+            produto.comissao_afiliado_percentual = afiliado_percentual
+            produto.custo_taxas_marketplace = custo_taxas_marketplace
+            produto.custo_estimado = custo_total
+            produto.preco_venda = preco_venda
+            produto.margem_lucro = margem_lucro
+            produto.save()
 
-        return JsonResponse({
-            'sucesso': True,
-            'mensagem': f'Produto "{produto.nome}" salvo no catálogo com sucesso!',
-            'produto_id': produto.id
-        })
+            return JsonResponse({
+                'sucesso': True,
+                'mensagem': f'Produto "{produto.nome}" atualizado com sucesso!',
+                'produto_id': produto.id,
+                'redirect_url': reverse('produtos:detalhe', kwargs={'pk': produto.id})
+            })
+        else:
+            # Cria o Produto no Banco de Dados
+            produto = Produto.objects.create(
+                nome=nome,
+                categoria=categoria,
+                peso_estimado=peso_g,
+                tempo_estimado=tempo_estimado,
+                detalhes_filamentos=detalhes_filamentos,
+                potencia_impressora_w=potencia_w,
+                custo_kwh_energia=kwh_preco,
+                custo_embalagem=custo_embalagem,
+                custo_insumos=custo_insumos,
+                custo_mao_de_obra=custo_mao_de_obra,
+                marketplace=marketplace,
+                comissao_afiliado_percentual=afiliado_percentual,
+                custo_taxas_marketplace=custo_taxas_marketplace,
+                custo_estimado=custo_total,
+                preco_venda=preco_venda,
+                margem_lucro=margem_lucro,
+                ativo=True
+            )
+
+            return JsonResponse({
+                'sucesso': True,
+                'mensagem': f'Produto "{produto.nome}" salvo no catálogo com sucesso!',
+                'produto_id': produto.id,
+                'redirect_url': reverse('produtos:detalhe', kwargs={'pk': produto.id})
+            })
 
     except Exception as e:
         return JsonResponse({'sucesso': False, 'erro': str(e)}, status=400)

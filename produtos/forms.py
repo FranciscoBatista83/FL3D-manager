@@ -16,13 +16,13 @@ class ProdutoForm(forms.ModelForm):
         model = Produto
         fields = [
             # Identificação
-            'nome', 'codigo', 'descricao', 'foto', 'arquivo_impressao',
+            'nome', 'categoria', 'codigo', 'descricao', 'foto', 'arquivo_impressao',
             # Parâmetros de impressão e custos
             'peso_estimado', 'tempo_estimado',
             'detalhes_filamentos', 'potencia_impressora_w', 'custo_kwh_energia',
             'custo_embalagem', 'custo_insumos', 'custo_mao_de_obra',
             # Marketplace e precificação
-            'marketplace', 'custo_taxas_marketplace',
+            'marketplace', 'comissao_afiliado_percentual', 'custo_taxas_marketplace',
             'custo_estimado', 'preco_venda', 'margem_lucro',
             # Status
             'ativo',
@@ -34,6 +34,9 @@ class ProdutoForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             if field_name == 'ativo':
                 field.widget.attrs['class'] = 'form-check-input'
+            elif field_name == 'categoria':
+                field.widget.attrs['class'] = 'form-select'
+                field.empty_label = 'Selecione uma Categoria...'
             else:
                 field.widget.attrs['class'] = 'form-control'
             

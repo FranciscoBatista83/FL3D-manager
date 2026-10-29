@@ -7,6 +7,9 @@
 <a href="{% url 'produtos:lista' %}" class="btn btn-secondary me-2">
     <i class="bi bi-arrow-left"></i> Voltar
 </a>
+<a href="{% url 'calculadora:index' %}?produto_id={{ produto.pk }}" class="btn btn-outline-primary me-2">
+    <i class="bi bi-calculator"></i> Recalcular
+</a>
 <a href="{% url 'produtos:editar' produto.pk %}" class="btn btn-primary me-2">
     <i class="bi bi-pencil"></i> Editar
 </a>
@@ -30,7 +33,12 @@
                 {% endif %}
                 
                 <h4 class="mb-1">{{ produto.nome }}</h4>
-                <p class="text-muted">{{ produto.codigo|default:"Sem Código" }}</p>
+                <div class="mb-2">
+                    {% if produto.categoria %}
+                        <span class="badge bg-light text-primary border me-1"><i class="bi bi-folder2-open me-1"></i>{{ produto.categoria.nome }}</span>
+                    {% endif %}
+                    <span class="text-muted small">{{ produto.codigo|default:"Sem Código" }}</span>
+                </div>
                 
                 <div class="mb-3">
                     {% if produto.ativo %}
@@ -63,9 +71,19 @@
                         <h6 class="border-bottom pb-2 text-muted">Especificações</h6>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                Categoria
+                                <span class="fw-bold">{{ produto.categoria.nome|default:"-" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                 Marketplace
                                 <span class="fw-bold">{{ produto.marketplace|default:"-" }}</span>
                             </li>
+                            {% if produto.comissao_afiliado_percentual > 0 %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span><i class="bi bi-people me-1 text-primary"></i> Comissão Afiliados</span>
+                                <span class="fw-bold">{{ produto.comissao_afiliado_percentual }}%</span>
+                            </li>
+                            {% endif %}
                         </ul>
                         {% if produto.arquivo_impressao %}
                         <div class="mt-3">
@@ -97,6 +115,11 @@
                                 <span class="fw-bold">{{ produto.margem_lucro|default:"-" }}%</span>
                             </li>
                         </ul>
+                        <div class="mt-3">
+                            <a href="{% url 'calculadora:index' %}?produto_id={{ produto.pk }}" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-calculator me-1"></i> Abrir na Calculadora
+                            </a>
+                        </div>
                     </div>
                 </div>
                 

@@ -82,6 +82,27 @@
 {% endblock %}
 
 {% block content %}
+{% if produto %}
+<div class="alert alert-primary d-flex justify-content-between align-items-center mb-3 shadow-sm py-2 px-3 border-0" style="background: linear-gradient(90deg, #ede7f6 0%, #e8eaf6 100%); border-left: 5px solid #492f9c !important;">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-pencil-square text-primary fs-4 me-2"></i>
+        <div>
+            <span class="text-uppercase small fw-bold text-muted d-block" style="font-size: 0.72rem;">Modo de Edição</span>
+            <strong class="text-dark">{{ produto.nome }}</strong>
+            {% if produto.codigo %}<span class="badge bg-secondary ms-2">{{ produto.codigo }}</span>{% endif %}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'produtos:detalhe' produto.pk %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar à Ficha
+        </a>
+        <a href="{% url 'calculadora:index' %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-plus-circle me-1"></i> Novo Cálculo Limpo
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <form id="formCalculadora">
     {% csrf_token %}
 
@@ -89,23 +110,39 @@
         <!-- COLUNA DA ESQUERDA: FORMULÁRIO -->
         <div class="col-lg-7">
             
-            <!-- CARD 1: INFORMAÇÕES BÁSICAS -->
+            <!-- CARD 1: INFORMAÇÕES BÁSICAS & CANAL -->
             <div class="card calc-card">
                 <div class="card-header calc-card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0"><i class="bi bi-info-circle me-2 text-primary"></i>1. Informações Básicas</h6>
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-2 text-primary"></i>1. Identificação & Canal de Venda</h6>
                     <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-lightning-charge me-1"></i>Cálculo Automático</span>
                 </div>
                 <div class="card-body calc-card-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark mb-1">Nome do Produto / Peça 3D</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-pencil-square"></i></span>
-                            <input type="text" class="form-control calc-input" id="nome_produto">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-7">
+                            <label class="form-label fw-bold text-dark mb-1">Nome do Produto / Peça 3D</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-pencil-square"></i></span>
+                                <input type="text" class="form-control calc-input" id="nome_produto" placeholder="Ex: Vaso Geométrico Espiral, Suporte Headset..." value="{{ produto.nome|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-dark mb-1">Categoria</label>
+                            <div class="input-group">
+                                <select class="form-select calc-input" id="categoria_id">
+                                    <option value="">Selecione...</option>
+                                    {% for cat in categorias %}
+                                    <option value="{{ cat.id }}" {% if produto and produto.categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="btn btn-outline-primary" id="btn-modal-nova-categoria" title="Cadastrar nova categoria">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div>
                         <label class="form-label fw-bold text-dark mb-1">Canal de Venda / Marketplace</label>
-                        <ul class="nav nav-pills nav-pills-fl3d mb-0" id="pills-tab" role="tablist">
+                        <ul class="nav nav-pills nav-pills-fl3d mb-2" id="pills-tab" role="tablist">
                             <li class="nav-item">
                                 <button type="button" class="nav-link active btn-market" data-market="direto">
                                     <i class="bi bi-shop me-1"></i> Venda Direta
@@ -122,6 +159,32 @@
                                 </button>
                             </li>
                         </ul>
+
+                        <!-- OPÇÕES SHOPEE -->
+                        <div id="painel-shopee" class="p-2.5 mt-2 bg-light rounded border" style="display: none;">
+                            <div class="row align-items-center g-2">
+                                <div class="col-sm-6">
+                                    <label class="form-label small mb-1 fw-bold text-dark"><i class="bi bi-people me-1 text-primary"></i>Comissão Afiliados (%) <span class="text-muted fw-normal">(opcional)</span></label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.5" class="form-control calc-input" id="afiliado_percentual_shopee" placeholder="0">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OPÇÕES TIKTOK -->
+                        <div id="painel-tiktok" class="p-2.5 mt-2 bg-light rounded border" style="display: none;">
+                            <div class="row align-items-center g-2">
+                                <div class="col-sm-6">
+                                    <label class="form-label small mb-1 fw-bold text-dark"><i class="bi bi-people me-1 text-primary"></i>Comissão Afiliados (%) <span class="text-muted fw-normal">(opcional)</span></label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.5" class="form-control calc-input" id="afiliado_percentual_tiktok" placeholder="0">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -170,14 +233,14 @@
                         <div class="col-md-4">
                             <label class="form-label">Tempo de Impressão</label>
                             <div class="input-group">
-                                <input type="number" step="0.1" class="form-control calc-input" id="horas_impressao">
+                                <input type="number" step="0.01" class="form-control calc-input" id="horas_impressao" value="{% if horas_impressao %}{{ horas_impressao }}{% endif %}">
                                 <span class="input-group-text">h</span>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Potência Impressora</label>
                             <div class="input-group">
-                                <input type="number" class="form-control calc-input" id="potencia_w">
+                                <input type="number" class="form-control calc-input" id="potencia_w" value="{% if produto %}{{ produto.potencia_impressora_w }}{% endif %}">
                                 <span class="input-group-text">W</span>
                             </div>
                         </div>
@@ -185,28 +248,28 @@
                             <label class="form-label">Custo Energia (kWh)</label>
                             <div class="input-group">
                                 <span class="input-group-text">R$</span>
-                                <input type="number" step="0.01" class="form-control calc-input" id="kwh_preco">
+                                <input type="number" step="0.01" class="form-control calc-input" id="kwh_preco" value="{% if produto %}{{ produto.custo_kwh_energia }}{% endif %}">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Embalagem</label>
                             <div class="input-group">
                                 <span class="input-group-text">R$</span>
-                                <input type="number" step="0.01" class="form-control calc-input" id="custo_embalagem">
+                                <input type="number" step="0.01" class="form-control calc-input" id="custo_embalagem" value="{% if produto %}{{ produto.custo_embalagem }}{% endif %}">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Insumos Extras</label>
                             <div class="input-group">
                                 <span class="input-group-text">R$</span>
-                                <input type="number" step="0.01" class="form-control calc-input" id="custo_insumos">
+                                <input type="number" step="0.01" class="form-control calc-input" id="custo_insumos" value="{% if produto %}{{ produto.custo_insumos }}{% endif %}">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Mão de Obra</label>
                             <div class="input-group">
                                 <span class="input-group-text">R$</span>
-                                <input type="number" step="0.01" class="form-control calc-input" id="custo_mao_de_obra">
+                                <input type="number" step="0.01" class="form-control calc-input" id="custo_mao_de_obra" value="{% if produto %}{{ produto.custo_mao_de_obra }}{% endif %}">
                             </div>
                         </div>
                     </div>
@@ -221,31 +284,12 @@
                 <div class="card-body calc-card-body">
                     <div class="row g-3 align-items-center">
                         <div class="col-md-6">
-                            <label class="form-label">Margem Desejada (%)</label>
+                            <label class="form-label fw-bold text-dark">Margem Desejada (%)</label>
                             <div class="input-group">
-                                <input type="number" class="form-control calc-input" id="margem_alvo" min="0" max="95">
+                                <input type="number" class="form-control calc-input" id="margem_alvo" min="0" max="95" placeholder="Ex: 40" value="{% if produto %}{{ produto.margem_lucro }}{% endif %}">
                                 <span class="input-group-text">%</span>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- OPÇÕES SHOPEE -->
-                    <div id="painel-shopee" class="p-3 mt-3 bg-light rounded border" style="display: none;">
-                        <h6 class="fw-bold text-dark mb-1"><i class="bi bi-bag-check me-1 text-warning"></i>Shopee — Vendedor CNPJ</h6>
-                        <p class="text-muted small mb-0">A comissão é calculada automaticamente por faixa de preço conforme tabela vigente (01/10/2026).</p>
-                    </div>
-
-                    <!-- OPÇÕES TIKTOK -->
-                    <div id="painel-tiktok" class="p-3 mt-3 bg-light rounded border" style="display: none;">
-                        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-tiktok me-1 text-dark"></i>Opções TikTok Shop</h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small">Comissão Afiliados (%)</label>
-                                <div class="input-group">
-                                    <input type="number" step="0.5" class="form-control calc-input" id="afiliado_percentual">
-                                    <span class="input-group-text">%</span>
-                                </div>
-                            </div>
+                            <small class="text-muted">Margem líquida desejada sobre o preço de venda final.</small>
                         </div>
                     </div>
                 </div>
@@ -307,6 +351,21 @@
                                 <span><i class="bi bi-receipt me-2 text-danger"></i>Taxa / Comissão Marketplace</span>
                                 <strong class="text-danger" id="res-taxas">R$ 0,00</strong>
                             </li>
+                            <!-- Sub-itens: detalhe da taxa do marketplace -->
+                            <li class="list-group-item py-2 px-3" id="detalhe-marketplace" style="display:none; background:#fffaf8;">
+                                <div class="d-flex justify-content-between align-items-center text-muted small mb-1">
+                                    <span><i class="bi bi-arrow-return-right me-2 text-danger opacity-50"></i>Comissão <span id="res-taxa-percentual-label"></span></span>
+                                    <span id="res-comissao-pct" class="text-danger">R$ 0,00</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center text-muted small mb-1">
+                                    <span><i class="bi bi-arrow-return-right me-2 text-danger opacity-50"></i>Taxa Fixa por Item</span>
+                                    <span id="res-taxa-fixa" class="text-danger">R$ 0,00</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center text-muted small" id="linha-afiliado" style="display:none;">
+                                    <span><i class="bi bi-arrow-return-right me-2 text-danger opacity-50"></i>Comissão Afiliados</span>
+                                    <span id="res-comissao-afiliado" class="text-danger">R$ 0,00</span>
+                                </div>
+                            </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
                                 <span><i class="bi bi-percent me-2 text-success"></i>Margem Real Obtida</span>
                                 <strong class="text-success" id="res-margem-real">0.00%</strong>
@@ -319,20 +378,87 @@
                     </div>
                 </div>
 
+                {% if produto %}
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success btn-lg fw-bold shadow-sm" id="btnSalvarProduto">
+                        <i class="bi bi-arrow-repeat me-2"></i> Salvar e Atualizar Produto
+                    </button>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btnEditarCompleto">
+                                <i class="bi bi-pencil-square me-1"></i> Abrir na Edição
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btnSalvarComoNovo">
+                                <i class="bi bi-copy me-1"></i> Criar Nova Cópia
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
                 <div class="d-grid">
-                    <button type="button" class="btn btn-primary btn-lg fw-bold" id="btnSalvarProduto">
+                    <button type="button" class="btn btn-primary btn-lg fw-bold shadow-sm" id="btnSalvarProduto">
                         <i class="bi bi-floppy me-2"></i> Salvar Produto no Catálogo
                     </button>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </form>
+
+<!-- Modal Gerenciar Categorias -->
+<div class="modal fade" id="modalNovaCategoria" tabindex="-1" aria-labelledby="modalNovaCategoriaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNovaCategoriaLabel">
+                    <i class="bi bi-tags text-primary me-2"></i>Gerenciar Categorias
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Criação rápida -->
+                <div class="input-group mb-4">
+                    <input type="text" class="form-control" id="input-nova-categoria-nome"
+                           placeholder="Nome da nova categoria...">
+                    <button class="btn btn-primary" type="button" id="btn-salvar-nova-categoria">
+                        <i class="bi bi-plus-lg me-1"></i>Adicionar
+                    </button>
+                </div>
+                <!-- Lista de categorias existentes -->
+                <div id="lista-categorias-container">
+                    <div class="text-center text-muted py-3">
+                        <span class="spinner-border spinner-border-sm me-2"></span>Carregando categorias...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="dados-edicao-json" type="application/json">
+{{ dados_produto_json|safe }}
+</script>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        let dadosEdicao = null;
+        try {
+            const el = document.getElementById('dados-edicao-json');
+            if (el && el.textContent.trim()) {
+                dadosEdicao = JSON.parse(el.textContent);
+            }
+        } catch (e) {
+            console.error("Erro ao carregar dados de edição:", e);
+        }
+
         let selectedMarketplace = 'direto';
         let dadosUltimoCalculo = null;
 
@@ -341,6 +467,8 @@
         const painelTiktok = document.getElementById('painel-tiktok');
         const badgeCanal = document.getElementById('badge-canal');
         const btnSalvarProduto = document.getElementById('btnSalvarProduto');
+        const btnEditarCompleto = document.getElementById('btnEditarCompleto');
+        const btnSalvarComoNovo = document.getElementById('btnSalvarComoNovo');
 
         // Alternar abas de marketplace
         btnMarkets.forEach(btn => {
@@ -374,17 +502,17 @@
 
         function atualizarBotoesRemover() {
             const itens = containerFilamentos.querySelectorAll('.filamento-item');
-            itens.forEach((item, index) => {
+            itens.forEach(item => {
                 const btnRemover = item.querySelector('.btn-remover-filamento');
-                // Desabilita o botão se for o único item
                 btnRemover.disabled = (itens.length === 1);
             });
         }
 
-        btnAddFilamento.addEventListener('click', () => {
-            const novoItem = containerFilamentos.querySelector('.filamento-item').cloneNode(true);
-            novoItem.querySelector('.input-peso').value = '';
-            novoItem.querySelector('.input-valor').value = '';
+        function criarLinhaFilamento(peso = '', valor = '') {
+            const template = containerFilamentos.querySelector('.filamento-item');
+            const novoItem = template.cloneNode(true);
+            novoItem.querySelector('.input-peso').value = peso;
+            novoItem.querySelector('.input-valor').value = valor;
             containerFilamentos.appendChild(novoItem);
             
             // Re-bind listeners
@@ -400,6 +528,10 @@
             });
 
             atualizarBotoesRemover();
+        }
+
+        btnAddFilamento.addEventListener('click', () => {
+            criarLinhaFilamento('', '');
         });
 
         // Bind remover no primeiro item
@@ -410,6 +542,67 @@
                 executarCalculo();
             }
         });
+
+        // Preenchimento de dados quando estiver editando produto existente
+        if (dadosEdicao && dadosEdicao.id) {
+            if (dadosEdicao.nome) {
+                document.getElementById('nome_produto').value = dadosEdicao.nome;
+            }
+            if (dadosEdicao.categoria_id) {
+                document.getElementById('categoria_id').value = dadosEdicao.categoria_id;
+            }
+            if (dadosEdicao.horas_impressao !== '' && dadosEdicao.horas_impressao !== null) {
+                document.getElementById('horas_impressao').value = dadosEdicao.horas_impressao;
+            }
+            if (dadosEdicao.potencia_w !== undefined) {
+                document.getElementById('potencia_w').value = dadosEdicao.potencia_w;
+            }
+            if (dadosEdicao.kwh_preco !== undefined) {
+                document.getElementById('kwh_preco').value = dadosEdicao.kwh_preco;
+            }
+            if (dadosEdicao.custo_embalagem !== undefined) {
+                document.getElementById('custo_embalagem').value = dadosEdicao.custo_embalagem;
+            }
+            if (dadosEdicao.custo_insumos !== undefined) {
+                document.getElementById('custo_insumos').value = dadosEdicao.custo_insumos;
+            }
+            if (dadosEdicao.custo_mao_de_obra !== undefined) {
+                document.getElementById('custo_mao_de_obra').value = dadosEdicao.custo_mao_de_obra;
+            }
+            if (dadosEdicao.margem_alvo !== undefined) {
+                document.getElementById('margem_alvo').value = dadosEdicao.margem_alvo;
+            }
+            if (dadosEdicao.comissao_afiliado_percentual !== undefined) {
+                const elShopee = document.getElementById('afiliado_percentual_shopee');
+                const elTiktok = document.getElementById('afiliado_percentual_tiktok');
+                if (elShopee) elShopee.value = dadosEdicao.comissao_afiliado_percentual || '';
+                if (elTiktok) elTiktok.value = dadosEdicao.comissao_afiliado_percentual || '';
+            }
+
+            // Preencher filamentos do produto
+            if (dadosEdicao.filamentos && dadosEdicao.filamentos.length > 0) {
+                const itens = containerFilamentos.querySelectorAll('.filamento-item');
+                itens.forEach((item, index) => {
+                    if (index > 0) item.remove();
+                });
+                const primeiroItem = containerFilamentos.querySelector('.filamento-item');
+                primeiroItem.querySelector('.input-peso').value = dadosEdicao.filamentos[0].peso_g || '';
+                primeiroItem.querySelector('.input-valor').value = dadosEdicao.filamentos[0].valor_kg || '';
+
+                for (let i = 1; i < dadosEdicao.filamentos.length; i++) {
+                    criarLinhaFilamento(dadosEdicao.filamentos[i].peso_g, dadosEdicao.filamentos[i].valor_kg);
+                }
+                atualizarBotoesRemover();
+            }
+
+            // Ativar marketplace inicial se vier do produto
+            if (dadosEdicao.marketplace) {
+                const marketBtn = document.querySelector(`.btn-market[data-market="${dadosEdicao.marketplace}"]`);
+                if (marketBtn) {
+                    marketBtn.click();
+                }
+            }
+        }
 
         // Escutar alterações nos campos
         const inputs = document.querySelectorAll('.calc-input');
@@ -431,9 +624,15 @@
                 filamentos.push({ peso_g: peso, valor_kg: valor });
                 pesoTotal += peso;
             });
-            // Guardar peso total e materiais para o momento de salvar
             window.pesoTotalEstimado = pesoTotal;
             window.filamentosAtuais = filamentos;
+
+            let afiliadoPercentual = 0;
+            if (selectedMarketplace === 'shopee') {
+                afiliadoPercentual = parseFloat(document.getElementById('afiliado_percentual_shopee').value) || 0;
+            } else if (selectedMarketplace === 'tiktok') {
+                afiliadoPercentual = parseFloat(document.getElementById('afiliado_percentual_tiktok').value) || 0;
+            }
 
             const bodyData = {
                 filamentos: filamentos,
@@ -445,7 +644,7 @@
                 custo_mao_de_obra: parseFloat(document.getElementById('custo_mao_de_obra').value) || 0,
                 margem_alvo: parseFloat(document.getElementById('margem_alvo').value) || 0,
                 marketplace: selectedMarketplace,
-                afiliado_percentual: parseFloat(document.getElementById('afiliado_percentual').value) || 0,
+                afiliado_percentual: afiliadoPercentual,
             };
 
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -472,6 +671,29 @@
                     
                     document.getElementById('res-custo-total').textContent = formatarMoeda(data.custo_producao.total);
                     document.getElementById('res-taxas').textContent = formatarMoeda(data.taxas_marketplace.total);
+
+                    // Detalhe das taxas do marketplace
+                    const detalhe = data.taxas_marketplace.detalhe || {};
+                    const detalheEl = document.getElementById('detalhe-marketplace');
+                    const linhaAfiliado = document.getElementById('linha-afiliado');
+
+                    if (selectedMarketplace !== 'direto' && parseFloat(data.taxas_marketplace.total) > 0) {
+                        detalheEl.style.display = 'block';
+                        const pct = parseFloat(detalhe.percentual || 0).toFixed(0);
+                        document.getElementById('res-taxa-percentual-label').textContent = '(' + pct + '%)';
+                        document.getElementById('res-comissao-pct').textContent = formatarMoeda(detalhe.comissao_percentual_valor || 0);
+                        document.getElementById('res-taxa-fixa').textContent = formatarMoeda(detalhe.taxa_fixa || 0);
+
+                        const valorAfiliado = parseFloat(detalhe.comissao_afiliado || 0);
+                        if (valorAfiliado > 0) {
+                            linhaAfiliado.style.display = 'flex';
+                            document.getElementById('res-comissao-afiliado').textContent = formatarMoeda(valorAfiliado);
+                        } else {
+                            linhaAfiliado.style.display = 'none';
+                        }
+                    } else {
+                        detalheEl.style.display = 'none';
+                    }
                     document.getElementById('res-lucro-liquido').textContent = formatarMoeda(data.lucro_liquido);
                     document.getElementById('res-margem-real').textContent = data.margem_real + '%';
                 }
@@ -479,19 +701,135 @@
             .catch(err => console.error("Erro no cálculo:", err));
         }
 
-        // Ação do Botão Salvar Produto (Redireciona preenchido para o Cadastro)
-        btnSalvarProduto.addEventListener('click', function () {
-            const nome = document.getElementById('nome_produto').value.trim();
-            if (!nome) {
-                alert("Por favor, preencha o Nome do Produto antes de cadastrar.");
-                document.getElementById('nome_produto').focus();
-                return;
-            }
+        // Executar cálculo logo na abertura
+        executarCalculo();
 
+        // Modal Nova Categoria na Calculadora
+        const btnModalCat = document.getElementById('btn-modal-nova-categoria');
+        const modalEl      = document.getElementById('modalNovaCategoria');
+        const modalCat     = modalEl ? new bootstrap.Modal(modalEl) : null;
+        const btnSalvarCat = document.getElementById('btn-salvar-nova-categoria');
+        const inputNomeCat = document.getElementById('input-nova-categoria-nome');
+        const selectCat    = document.getElementById('categoria_id');
+        const listaContainer = document.getElementById('lista-categorias-container');
+
+        const getCsrfToken = () => document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        function carregarCategorias() {
+            listaContainer.innerHTML = '<div class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm me-2"></span>Carregando...</div>';
+            fetch('{% url "produtos:listar_categorias_api" %}')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.categorias || data.categorias.length === 0) {
+                        listaContainer.innerHTML = '<p class="text-muted text-center small py-2">Nenhuma categoria cadastrada ainda.</p>';
+                        return;
+                    }
+                    let html = '<ul class="list-group list-group-flush">';
+                    data.categorias.forEach(cat => {
+                        const badge = cat.total_produtos === 1 ? '1 produto' : `${cat.total_produtos} produtos`;
+                        html += `
+                            <li class="list-group-item d-flex align-items-center justify-content-between px-0">
+                                <span class="fw-semibold">${cat.nome}</span>
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="badge bg-secondary-subtle text-secondary">${badge}</span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-excluir-cat"
+                                            data-cat-id="${cat.id}" data-cat-nome="${cat.nome}"
+                                            data-cat-total="${cat.total_produtos}">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </div>
+                            </li>`;
+                    });
+                    html += '</ul>';
+                    listaContainer.innerHTML = html;
+
+                    listaContainer.querySelectorAll('.btn-excluir-cat').forEach(btn => {
+                        btn.addEventListener('click', function () {
+                            const id    = this.dataset.catId;
+                            const nome  = this.dataset.catNome;
+                            const total = parseInt(this.dataset.catTotal, 10);
+                            let msg = `Excluir a categoria "${nome}"?`;
+                            if (total > 0) msg += `\n\nAtenção: ${total} produto(s) perderão a categoria (não serão excluídos).`;
+                            if (!confirm(msg)) return;
+
+                            fetch(`/produtos/api/categorias/${id}/excluir/`, {
+                                method: 'POST',
+                                headers: { 'X-CSRFToken': getCsrfToken() }
+                            })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.sucesso) {
+                                    const opt = selectCat ? selectCat.querySelector(`option[value="${id}"]`) : null;
+                                    if (opt) {
+                                        if (selectCat.value === String(id)) selectCat.value = '';
+                                        opt.remove();
+                                    }
+                                    carregarCategorias();
+                                } else {
+                                    alert(data.erro || 'Erro ao excluir categoria.');
+                                }
+                            })
+                            .catch(() => alert('Erro ao comunicar com o servidor.'));
+                        });
+                    });
+                })
+                .catch(() => {
+                    listaContainer.innerHTML = '<p class="text-danger small">Erro ao carregar categorias.</p>';
+                });
+        }
+
+        if (btnModalCat && modalCat) {
+            btnModalCat.addEventListener('click', function () {
+                inputNomeCat.value = '';
+                carregarCategorias();
+                modalCat.show();
+                setTimeout(() => inputNomeCat.focus(), 400);
+            });
+        }
+
+        if (btnSalvarCat && selectCat) {
+            btnSalvarCat.addEventListener('click', function () {
+                const nome = inputNomeCat.value.trim();
+                if (!nome) { alert('Informe o nome da categoria.'); inputNomeCat.focus(); return; }
+
+                btnSalvarCat.disabled = true;
+                btnSalvarCat.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...';
+
+                fetch('{% url "produtos:criar_categoria_api" %}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                    body: JSON.stringify({ nome })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        let opt = selectCat.querySelector(`option[value="${data.id}"]`);
+                        if (!opt) {
+                            opt = document.createElement('option');
+                            opt.value = data.id;
+                            opt.textContent = data.nome;
+                            selectCat.appendChild(opt);
+                        }
+                        selectCat.value = data.id;
+                        inputNomeCat.value = '';
+                        carregarCategorias();
+                    } else {
+                        alert(data.erro || 'Erro ao criar categoria.');
+                    }
+                })
+                .catch(() => alert('Erro ao comunicar com o servidor.'))
+                .finally(() => {
+                    btnSalvarCat.disabled = false;
+                    btnSalvarCat.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Adicionar';
+                });
+            });
+        }
+
+        function montarParamsRedirecionamento() {
+            const nome = document.getElementById('nome_produto').value.trim();
+            const categoriaId = document.getElementById('categoria_id').value || '';
             const peso_g = window.pesoTotalEstimado || 0;
             const horas = document.getElementById('horas_impressao').value || '';
-            // Não vamos mais mandar o valor_kg individual, se o usuário tiver múltiplos. Fica vazio para não quebrar.
-            const valor_kg = ''; 
             const potencia = document.getElementById('potencia_w').value || '';
             const kwh_preco = document.getElementById('kwh_preco').value || '';
             const embalagem = document.getElementById('custo_embalagem').value || '';
@@ -499,7 +837,13 @@
             const mao_de_obra = document.getElementById('custo_mao_de_obra').value || '';
             const margem_alvo = document.getElementById('margem_alvo').value || '';
 
-            // Formata horas de impressão para o formato HH:MM:SS
+            let afiliadoPercentual = 0;
+            if (selectedMarketplace === 'shopee') {
+                afiliadoPercentual = parseFloat(document.getElementById('afiliado_percentual_shopee').value) || 0;
+            } else if (selectedMarketplace === 'tiktok') {
+                afiliadoPercentual = parseFloat(document.getElementById('afiliado_percentual_tiktok').value) || 0;
+            }
+
             let tempoFormatted = '';
             if (horas) {
                 const totalSec = Math.round(parseFloat(horas) * 3600);
@@ -509,11 +853,12 @@
                 tempoFormatted = `${h}:${m}:${s}`;
             }
 
-            const params = new URLSearchParams({
+            return new URLSearchParams({
                 nome: nome,
+                categoria: categoriaId,
                 peso_estimado: peso_g,
                 tempo_estimado: tempoFormatted,
-                valor_kg_filamento: valor_kg,
+                valor_kg_filamento: '',
                 detalhes_filamentos: JSON.stringify(window.filamentosAtuais || []),
                 potencia_impressora_w: potencia,
                 custo_kwh_energia: kwh_preco,
@@ -521,14 +866,107 @@
                 custo_insumos: insumos,
                 custo_mao_de_obra: mao_de_obra,
                 marketplace: selectedMarketplace,
+                comissao_afiliado_percentual: afiliadoPercentual,
                 custo_taxas_marketplace: dadosUltimoCalculo ? dadosUltimoCalculo.taxas_marketplace.total : '',
                 custo_estimado: dadosUltimoCalculo ? dadosUltimoCalculo.custo_producao.total : '',
                 preco_venda: dadosUltimoCalculo ? dadosUltimoCalculo.preco_venda : '',
                 margem_lucro: dadosUltimoCalculo ? dadosUltimoCalculo.margem_real : margem_alvo
             });
+        }
 
-            window.location.href = '{% url "produtos:novo" %}?' + params.toString();
+        // Ação do Botão Principal: Salvar / Atualizar
+        btnSalvarProduto.addEventListener('click', function () {
+            const nome = document.getElementById('nome_produto').value.trim();
+            if (!nome) {
+                alert("Por favor, preencha o Nome do Produto antes de salvar.");
+                document.getElementById('nome_produto').focus();
+                return;
+            }
+
+            let afiliadoPercentual = 0;
+            if (selectedMarketplace === 'shopee') {
+                afiliadoPercentual = parseFloat(document.getElementById('afiliado_percentual_shopee').value) || 0;
+            } else if (selectedMarketplace === 'tiktok') {
+                afiliadoPercentual = parseFloat(document.getElementById('afiliado_percentual_tiktok').value) || 0;
+            }
+
+            const isEdicao = Boolean(dadosEdicao && dadosEdicao.id);
+
+            if (isEdicao) {
+                // Atualizar diretamente via API
+                const btnOriginalText = btnSalvarProduto.innerHTML;
+                btnSalvarProduto.disabled = true;
+                btnSalvarProduto.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
+
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const payload = {
+                    produto_id: dadosEdicao.id,
+                    nome: nome,
+                    categoria_id: document.getElementById('categoria_id').value || null,
+                    peso_g: window.pesoTotalEstimado || 0,
+                    horas_impressao: parseFloat(document.getElementById('horas_impressao').value) || 0,
+                    custo_total: dadosUltimoCalculo ? dadosUltimoCalculo.custo_producao.total : 0,
+                    preco_venda: dadosUltimoCalculo ? dadosUltimoCalculo.preco_venda : 0,
+                    margem_lucro: dadosUltimoCalculo ? dadosUltimoCalculo.margem_real : (parseFloat(document.getElementById('margem_alvo').value) || 0),
+                    marketplace: selectedMarketplace,
+                    afiliado_percentual: afiliadoPercentual,
+                    detalhes_filamentos: window.filamentosAtuais || [],
+                    potencia_w: parseFloat(document.getElementById('potencia_w').value) || 150,
+                    kwh_preco: parseFloat(document.getElementById('kwh_preco').value) || 0.85,
+                    custo_embalagem: parseFloat(document.getElementById('custo_embalagem').value) || 0,
+                    custo_insumos: parseFloat(document.getElementById('custo_insumos').value) || 0,
+                    custo_mao_de_obra: parseFloat(document.getElementById('custo_mao_de_obra').value) || 0,
+                    custo_taxas_marketplace: dadosUltimoCalculo ? dadosUltimoCalculo.taxas_marketplace.total : 0
+                };
+
+                fetch('{% url "calculadora:salvar_produto_api" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        alert("Erro ao salvar: " + (data.erro || 'Desconhecido'));
+                        btnSalvarProduto.disabled = false;
+                        btnSalvarProduto.innerHTML = btnOriginalText;
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro na requisição:", err);
+                    alert("Erro ao se comunicar com o servidor.");
+                    btnSalvarProduto.disabled = false;
+                    btnSalvarProduto.innerHTML = btnOriginalText;
+                });
+            } else {
+                // Modo Criação: Redireciona para produtos:novo
+                const params = montarParamsRedirecionamento();
+                window.location.href = '{% url "produtos:novo" %}?' + params.toString();
+            }
         });
+
+        // Ação do Botão Abrir na Edição Completa
+        if (btnEditarCompleto) {
+            btnEditarCompleto.addEventListener('click', function () {
+                const params = montarParamsRedirecionamento();
+                {% if produto %}
+                window.location.href = '{% url "produtos:editar" produto.pk %}?' + params.toString();
+                {% endif %}
+            });
+        }
+
+        // Ação do Botão Salvar como Nova Cópia
+        if (btnSalvarComoNovo) {
+            btnSalvarComoNovo.addEventListener('click', function () {
+                const params = montarParamsRedirecionamento();
+                window.location.href = '{% url "produtos:novo" %}?' + params.toString();
+            });
+        }
     });
 </script>
 {% endblock %}

@@ -15,12 +15,16 @@ Controla todas as telas do catálogo de produtos da FL3D Studio:
 
 import os
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.db.models import Count
+import json
 
-from .models import Produto
+from .models import Produto, Categoria
 from .forms import ProdutoForm
 
 
@@ -36,14 +40,29 @@ class ProdutoListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         """
         Permite pesquisar produtos tanto pelo Nome (ex: 'Chaveiro')
-        quanto pelo Código SKU (ex: 'CHV-001').
+        quanto pelo Código SKU (ex: 'CHV-001'), e filtrar por categoria.
         """
         queryset = super().get_queryset()
         busca = self.request.GET.get('q')
+        categoria_id = self.request.GET.get('categoria')
         if busca:
             # O operador '|' significa 'OU': busca por nome OU por código
             queryset = queryset.filter(nome__icontains=busca) | queryset.filter(codigo__icontains=busca)
+        if categoria_id:
+            if categoria_id == 'sem_categoria':
+                queryset = queryset.filter(categoria__isnull=True)
+            else:
+                try:
+                    queryset = queryset.filter(categoria_id=int(categoria_id))
+                except (ValueError, TypeError):
+                    pass
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categorias'] = Categoria.objects.all()
+        context['categoria_selecionada'] = self.request.GET.get('categoria', '')
+        return context
 
 
 class ProdutoCreateView(LoginRequiredMixin, CreateView):
@@ -61,10 +80,10 @@ class ProdutoCreateView(LoginRequiredMixin, CreateView):
         """
         initial = super().get_initial()
         fields_to_transfer = [
-            'nome', 'peso_estimado', 'tempo_estimado',
+            'nome', 'categoria', 'peso_estimado', 'tempo_estimado',
             'valor_kg_filamento', 'detalhes_filamentos', 'potencia_impressora_w', 'custo_kwh_energia',
             'custo_embalagem', 'custo_insumos', 'custo_mao_de_obra',
-            'marketplace', 'custo_taxas_marketplace',
+            'marketplace', 'comissao_afiliado_percentual', 'custo_taxas_marketplace',
             'custo_estimado', 'preco_venda', 'margem_lucro'
         ]
         for field in fields_to_transfer:
@@ -95,6 +114,30 @@ class ProdutoUpdateView(LoginRequiredMixin, UpdateView):
     form_class = ProdutoForm
     template_name = 'produtos/produto_form.html'
     success_url = reverse_lazy('produtos:lista')
+
+    def get_initial(self):
+        """
+        Captura eventuais parâmetros atualizados repassados pela Calculadora via URL.
+        """
+        initial = super().get_initial()
+        fields_to_transfer = [
+            'nome', 'categoria', 'peso_estimado', 'tempo_estimado',
+            'valor_kg_filamento', 'detalhes_filamentos', 'potencia_impressora_w', 'custo_kwh_energia',
+            'custo_embalagem', 'custo_insumos', 'custo_mao_de_obra',
+            'marketplace', 'comissao_afiliado_percentual', 'custo_taxas_marketplace',
+            'custo_estimado', 'preco_venda', 'margem_lucro'
+        ]
+        for field in fields_to_transfer:
+            val = self.request.GET.get(field)
+            if val is not None and val != '':
+                if field == 'detalhes_filamentos':
+                    import json
+                    try:
+                        val = json.loads(val)
+                    except json.JSONDecodeError:
+                        pass
+                initial[field] = val
+        return initial
 
     def form_valid(self, form):
         """
@@ -174,3 +217,57 @@ def abrir_arquivo_impressao(request, pk):
     else:
         messages.warning(request, 'Este produto nao possui arquivo de impressao cadastrado.')
     return redirect('produtos:detalhe', pk=pk)
+
+
+@require_http_methods(["POST"])
+def criar_categoria_api(request):
+    """
+    Endpoint AJAX para cadastrar rapidamente uma nova categoria.
+    """
+    try:
+        try:
+            data = json.loads(request.body)
+            nome = str(data.get('nome', '')).strip()
+        except Exception:
+            nome = str(request.POST.get('nome', '')).strip()
+
+        if not nome:
+            return JsonResponse({'sucesso': False, 'erro': 'Informe o nome da categoria.'}, status=400)
+
+        categoria, criada = Categoria.objects.get_or_create(nome=nome)
+        return JsonResponse({
+            'sucesso': True,
+            'id': categoria.id,
+            'nome': categoria.nome,
+            'criada': criada,
+            'mensagem': f'Categoria "{categoria.nome}" pronta para uso!'
+        })
+    except Exception as e:
+        return JsonResponse({'sucesso': False, 'erro': str(e)}, status=400)
+
+
+@require_http_methods(["GET"])
+def listar_categorias_api(request):
+    """
+    Endpoint AJAX para listar todas as categorias com a contagem de produtos vinculados.
+    """
+    categorias = Categoria.objects.annotate(total_produtos=Count('produtos')).values('id', 'nome', 'total_produtos')
+    return JsonResponse({'sucesso': True, 'categorias': list(categorias)})
+
+
+@require_http_methods(["POST"])
+def excluir_categoria_api(request, pk):
+    """
+    Endpoint AJAX para excluir uma categoria.
+    Produtos associados terão categoria definida como NULL (sem perda de produtos).
+    """
+    try:
+        categoria = get_object_or_404(Categoria, pk=pk)
+        nome = categoria.nome
+        categoria.delete()
+        return JsonResponse({
+            'sucesso': True,
+            'mensagem': f'Categoria "{nome}" excluída com sucesso!'
+        })
+    except Exception as e:
+        return JsonResponse({'sucesso': False, 'erro': str(e)}, status=400)
