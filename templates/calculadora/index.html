@@ -78,6 +78,130 @@
     .list-group-item {
         font-size: 0.85rem !important;
     }
+
+    /* Botão Flutuante (FAB) da Calculadora */
+    .btn-calc-fab {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        width: 58px;
+        height: 58px;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, #2d1b69 0%, #492f9c 100%);
+        color: #ffffff !important;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 24px rgba(45, 27, 105, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1045;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-calc-fab:hover {
+        transform: translateY(-4px) scale(1.08);
+        box-shadow: 0 12px 28px rgba(73, 47, 156, 0.6);
+        background: linear-gradient(135deg, #382182 0%, #5939bd 100%);
+        color: #ffffff !important;
+    }
+    .btn-calc-fab:active {
+        transform: scale(0.95);
+    }
+
+    /* Modal Calculadora */
+    .calc-pocket {
+        background: #1e1338;
+        border-radius: 20px;
+        padding: 20px;
+        color: #ffffff;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+    }
+    .calc-screen {
+        background: #120a24;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        text-align: right;
+        min-height: 86px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .calc-history {
+        font-size: 0.85rem;
+        color: #a49fc4;
+        min-height: 1.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .calc-current {
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: #ffca28;
+        line-height: 1.15;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+    }
+    .calc-current::-webkit-scrollbar {
+        display: none;
+    }
+    .calc-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+    .calc-btn {
+        height: 52px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+    }
+    .calc-btn-num {
+        background: #2b1f4d;
+        color: #ffffff;
+    }
+    .calc-btn-num:hover {
+        background: #3d2c6e;
+        transform: translateY(-2px);
+    }
+    .calc-btn-op {
+        background: #492f9c;
+        color: #ffffff;
+    }
+    .calc-btn-op:hover {
+        background: #5d3bc7;
+        transform: translateY(-2px);
+    }
+    .calc-btn-action {
+        background: #392b5c;
+        color: #d8cff0;
+    }
+    .calc-btn-action:hover {
+        background: #4d3a7d;
+    }
+    .calc-btn-equals {
+        background: linear-gradient(135deg, #e65100 0%, #ff9800 100%);
+        color: #ffffff;
+        font-size: 1.4rem;
+    }
+    .calc-btn-equals:hover {
+        background: linear-gradient(135deg, #f57c00 0%, #ffb74d 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px rgba(255, 152, 0, 0.4);
+    }
+    .calc-btn:active {
+        transform: scale(0.94);
+    }
 </style>
 {% endblock %}
 
@@ -233,8 +357,10 @@
                         <div class="col-md-4">
                             <label class="form-label">Tempo de Impressão</label>
                             <div class="input-group">
-                                <input type="number" step="0.01" class="form-control calc-input" id="horas_impressao" value="{% if horas_impressao %}{{ horas_impressao }}{% endif %}">
+                                <input type="number" min="0" class="form-control calc-input" id="horas_impressao_h" placeholder="0" style="max-width:70px;">
                                 <span class="input-group-text">h</span>
+                                <input type="number" min="0" max="59" class="form-control calc-input" id="horas_impressao_m" placeholder="00" style="max-width:70px;">
+                                <span class="input-group-text">min</span>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -408,6 +534,79 @@
     </div>
 </form>
 
+
+<!-- Botão Flutuante (FAB) da Calculadora Rápida -->
+<button type="button" class="btn btn-calc-fab" id="btnFabCalculadora" data-bs-toggle="modal" data-bs-target="#modalCalculadoraRapida" title="Abrir Calculadora Rápida">
+    <i class="bi bi-calculator-fill fs-3"></i>
+</button>
+
+<!-- Modal Calculadora Rápida Flutuante -->
+<div class="modal fade" id="modalCalculadoraRapida" tabindex="-1" aria-labelledby="modalCalculadoraRapidaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 340px;">
+        <div class="modal-content border-0 bg-transparent">
+            <div class="calc-pocket">
+                <!-- Header do Modal -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-uppercase text-light opacity-75" style="letter-spacing: 0.5px;">
+                        <i class="bi bi-calculator me-1 text-warning"></i>Calculadora Rápida
+                    </span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <!-- Visor Digital -->
+                <div class="calc-screen">
+                    <div class="calc-history" id="calcHistory">&nbsp;</div>
+                    <div class="calc-current" id="calcDisplay">0</div>
+                </div>
+
+                <!-- Teclado da Calculadora -->
+                <div class="calc-grid">
+                    <!-- Linha 1 -->
+                    <button type="button" class="calc-btn calc-btn-action" data-action="clear" title="Limpar tudo (Esc / C)">C</button>
+                    <button type="button" class="calc-btn calc-btn-action" data-action="backspace" title="Apagar dígito (Backspace)"><i class="bi bi-backspace"></i></button>
+                    <button type="button" class="calc-btn calc-btn-action" data-action="percent" title="Porcentagem (%)">%</button>
+                    <button type="button" class="calc-btn calc-btn-op" data-op="÷" title="Dividir (/)">÷</button>
+
+                    <!-- Linha 2 -->
+                    <button type="button" class="calc-btn calc-btn-num" data-num="7">7</button>
+                    <button type="button" class="calc-btn calc-btn-num" data-num="8">8</button>
+                    <button type="button" class="calc-btn calc-btn-num" data-num="9">9</button>
+                    <button type="button" class="calc-btn calc-btn-op" data-op="×" title="Multiplicar (*)">×</button>
+
+                    <!-- Linha 3 -->
+                    <button type="button" class="calc-btn calc-btn-num" data-num="4">4</button>
+                    <button type="button" class="calc-btn calc-btn-num" data-num="5">5</button>
+                    <button type="button" class="calc-btn calc-btn-num" data-num="6">6</button>
+                    <button type="button" class="calc-btn calc-btn-op" data-op="-" title="Subtrair (-)">−</button>
+
+                    <!-- Linha 4 -->
+                    <button type="button" class="calc-btn calc-btn-num" data-num="1">1</button>
+                    <button type="button" class="calc-btn calc-btn-num" data-num="2">2</button>
+                    <button type="button" class="calc-btn calc-btn-num" data-num="3">3</button>
+                    <button type="button" class="calc-btn calc-btn-op" data-op="+" title="Somar (+)">+</button>
+
+                    <!-- Linha 5 -->
+                    <button type="button" class="calc-btn calc-btn-action" data-action="negate" title="Inverter sinal (±)">±</button>
+                    <button type="button" class="calc-btn calc-btn-num" data-num="0">0</button>
+                    <button type="button" class="calc-btn calc-btn-num" data-action="decimal">,</button>
+                    <button type="button" class="calc-btn calc-btn-equals" data-action="equals" title="Calcular (= / Enter)">=</button>
+                </div>
+
+                <!-- Rodapé / Copiar Resultado -->
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">
+                    <button type="button" class="btn btn-sm btn-outline-warning text-light px-3" id="btnCalcCopiar" title="Copiar valor do visor">
+                        <i class="bi bi-clipboard me-1"></i>Copiar
+                    </button>
+                    <span id="calcCopiedFeedback" class="small text-success fw-bold d-none">
+                        <i class="bi bi-check-lg me-1"></i>Copiado!
+                    </span>
+                    <button type="button" class="btn btn-sm text-white-50" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Gerenciar Categorias -->
 <div class="modal fade" id="modalNovaCategoria" tabindex="-1" aria-labelledby="modalNovaCategoriaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -448,7 +647,21 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    // Converte HH:MM -> horas decimais
+        function getHorasDecimal() {
+            const h = parseInt(document.getElementById('horas_impressao_h').value) || 0;
+            const m = parseInt(document.getElementById('horas_impressao_m').value) || 0;
+            return h + m / 60;
+        }
+
+        // Preenche os campos HH/MM a partir de um valor decimal
+        function setHorasDecimal(decimal) {
+            const totalMin = Math.round(parseFloat(decimal) * 60);
+            document.getElementById('horas_impressao_h').value = Math.floor(totalMin / 60);
+            document.getElementById('horas_impressao_m').value = totalMin % 60;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
         let dadosEdicao = null;
         try {
             const el = document.getElementById('dados-edicao-json');
@@ -552,7 +765,7 @@
                 document.getElementById('categoria_id').value = dadosEdicao.categoria_id;
             }
             if (dadosEdicao.horas_impressao !== '' && dadosEdicao.horas_impressao !== null) {
-                document.getElementById('horas_impressao').value = dadosEdicao.horas_impressao;
+                setHorasDecimal(dadosEdicao.horas_impressao);
             }
             if (dadosEdicao.potencia_w !== undefined) {
                 document.getElementById('potencia_w').value = dadosEdicao.potencia_w;
@@ -636,7 +849,7 @@
 
             const bodyData = {
                 filamentos: filamentos,
-                horas_impressao: parseFloat(document.getElementById('horas_impressao').value) || 0,
+                horas_impressao: getHorasDecimal(),
                 potencia_w: parseFloat(document.getElementById('potencia_w').value) || 0,
                 kwh_preco: parseFloat(document.getElementById('kwh_preco').value) || 0,
                 custo_embalagem: parseFloat(document.getElementById('custo_embalagem').value) || 0,
@@ -829,7 +1042,9 @@
             const nome = document.getElementById('nome_produto').value.trim();
             const categoriaId = document.getElementById('categoria_id').value || '';
             const peso_g = window.pesoTotalEstimado || 0;
-            const horas = document.getElementById('horas_impressao').value || '';
+            const horasH = parseInt(document.getElementById('horas_impressao_h').value) || 0;
+            const horasM = parseInt(document.getElementById('horas_impressao_m').value) || 0;
+            const horas = (horasH > 0 || horasM > 0) ? String(horasH + horasM / 60) : '';
             const potencia = document.getElementById('potencia_w').value || '';
             const kwh_preco = document.getElementById('kwh_preco').value || '';
             const embalagem = document.getElementById('custo_embalagem').value || '';
@@ -904,7 +1119,7 @@
                     nome: nome,
                     categoria_id: document.getElementById('categoria_id').value || null,
                     peso_g: window.pesoTotalEstimado || 0,
-                    horas_impressao: parseFloat(document.getElementById('horas_impressao').value) || 0,
+                    horas_impressao: getHorasDecimal(),
                     custo_total: dadosUltimoCalculo ? dadosUltimoCalculo.custo_producao.total : 0,
                     preco_venda: dadosUltimoCalculo ? dadosUltimoCalculo.preco_venda : 0,
                     margem_lucro: dadosUltimoCalculo ? dadosUltimoCalculo.margem_real : (parseFloat(document.getElementById('margem_alvo').value) || 0),
@@ -967,6 +1182,266 @@
                 window.location.href = '{% url "produtos:novo" %}?' + params.toString();
             });
         }
+
+        // ==========================================
+        // LÓGICA DA CALCULADORA RÁPIDA (MODAL FLUTUANTE)
+        // ==========================================
+        (function() {
+            let displayVal = '0';
+            let prevVal = null;
+            let currentOp = null;
+            let resetDisplayOnNextDigit = false;
+            let lastCalculated = false;
+
+            const displayEl = document.getElementById('calcDisplay');
+            const historyEl = document.getElementById('calcHistory');
+            const modalCalcEl = document.getElementById('modalCalculadoraRapida');
+            const btnCopiar = document.getElementById('btnCalcCopiar');
+            const feedbackCopiado = document.getElementById('calcCopiedFeedback');
+
+            function formatNumber(num) {
+                if (num === null || isNaN(num) || !isFinite(num)) return 'Erro';
+                // Máximo de 8 casas decimais sem zeros desnecessários
+                let rounded = Math.round(num * 100000000) / 100000000;
+                return String(rounded).replace('.', ',');
+            }
+
+            function parseDisplay(val) {
+                return parseFloat(String(val).replace(',', '.')) || 0;
+            }
+
+            function updateDisplay() {
+                if (displayEl) displayEl.textContent = displayVal;
+            }
+
+            function updateHistory(text) {
+                if (historyEl) historyEl.textContent = text || '\u00a0';
+            }
+
+            function inputDigit(digit) {
+                if (resetDisplayOnNextDigit || displayVal === '0' || lastCalculated) {
+                    displayVal = String(digit);
+                    resetDisplayOnNextDigit = false;
+                    lastCalculated = false;
+                } else {
+                    if (displayVal.replace(',', '').replace('-', '').length < 12) {
+                        displayVal += String(digit);
+                    }
+                }
+                updateDisplay();
+            }
+
+            function inputDecimal() {
+                if (resetDisplayOnNextDigit || lastCalculated) {
+                    displayVal = '0,';
+                    resetDisplayOnNextDigit = false;
+                    lastCalculated = false;
+                } else if (!displayVal.includes(',')) {
+                    displayVal += ',';
+                }
+                updateDisplay();
+            }
+
+            function clearAll() {
+                displayVal = '0';
+                prevVal = null;
+                currentOp = null;
+                resetDisplayOnNextDigit = false;
+                lastCalculated = false;
+                updateDisplay();
+                updateHistory('');
+            }
+
+            function backspace() {
+                if (lastCalculated || resetDisplayOnNextDigit) {
+                    return;
+                }
+                if (displayVal.length > 1) {
+                    displayVal = displayVal.slice(0, -1);
+                    if (displayVal === '-' || displayVal === '') displayVal = '0';
+                } else {
+                    displayVal = '0';
+                }
+                updateDisplay();
+            }
+
+            function negate() {
+                let val = parseDisplay(displayVal);
+                if (val !== 0) {
+                    val = -val;
+                    displayVal = formatNumber(val);
+                    updateDisplay();
+                }
+            }
+
+            function executeOperation(a, b, op) {
+                switch (op) {
+                    case '+': return a + b;
+                    case '-': return a - b;
+                    case '×': return a * b;
+                    case '÷': return b !== 0 ? a / b : NaN;
+                    default: return b;
+                }
+            }
+
+            function handleOperator(nextOp) {
+                const currentVal = parseDisplay(displayVal);
+
+                if (currentOp && !resetDisplayOnNextDigit) {
+                    const result = executeOperation(prevVal, currentVal, currentOp);
+                    displayVal = formatNumber(result);
+                    prevVal = result;
+                    updateDisplay();
+                } else {
+                    prevVal = currentVal;
+                }
+
+                currentOp = nextOp;
+                resetDisplayOnNextDigit = true;
+                lastCalculated = false;
+                updateHistory(`${formatNumber(prevVal)} ${currentOp}`);
+            }
+
+            function handleEquals() {
+                if (currentOp === null || prevVal === null) return;
+
+                const currentVal = parseDisplay(displayVal);
+                const result = executeOperation(prevVal, currentVal, currentOp);
+
+                updateHistory(`${formatNumber(prevVal)} ${currentOp} ${formatNumber(currentVal)} =`);
+                displayVal = formatNumber(result);
+                prevVal = null;
+                currentOp = null;
+                resetDisplayOnNextDigit = true;
+                lastCalculated = true;
+                updateDisplay();
+            }
+
+            function handlePercent() {
+                const currentVal = parseDisplay(displayVal);
+
+                if (currentOp !== null && prevVal !== null) {
+                    // Se estiver em soma ou subtração: calcula porcentagem de prevVal (ex: 100 + 10% = 110)
+                    if (currentOp === '+' || currentOp === '-') {
+                        const pctValue = prevVal * (currentVal / 100);
+                        const result = executeOperation(prevVal, pctValue, currentOp);
+                        updateHistory(`${formatNumber(prevVal)} ${currentOp} ${formatNumber(pctValue)} (${currentVal}%) =`);
+                        displayVal = formatNumber(result);
+                        prevVal = null;
+                        currentOp = null;
+                        resetDisplayOnNextDigit = true;
+                        lastCalculated = true;
+                    } else if (currentOp === '×' || currentOp === '÷') {
+                        // Multiplicação ou divisão direta por fração percentual (ex: 200 × 5% = 10)
+                        const pctValue = currentVal / 100;
+                        const result = executeOperation(prevVal, pctValue, currentOp);
+                        updateHistory(`${formatNumber(prevVal)} ${currentOp} ${currentVal}% =`);
+                        displayVal = formatNumber(result);
+                        prevVal = null;
+                        currentOp = null;
+                        resetDisplayOnNextDigit = true;
+                        lastCalculated = true;
+                    }
+                } else {
+                    // Sem operador prévio: apenas divide por 100 (ex: 50 % -> 0,5)
+                    const result = currentVal / 100;
+                    updateHistory(`${formatNumber(currentVal)}% =`);
+                    displayVal = formatNumber(result);
+                    resetDisplayOnNextDigit = true;
+                    lastCalculated = true;
+                }
+                updateDisplay();
+            }
+
+            // Cliques nos botões da calculadora
+            document.querySelectorAll('.calc-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (this.dataset.num !== undefined) {
+                        inputDigit(this.dataset.num);
+                    } else if (this.dataset.op) {
+                        handleOperator(this.dataset.op);
+                    } else if (this.dataset.action) {
+                        switch (this.dataset.action) {
+                            case 'clear': clearAll(); break;
+                            case 'backspace': backspace(); break;
+                            case 'decimal': inputDecimal(); break;
+                            case 'equals': handleEquals(); break;
+                            case 'percent': handlePercent(); break;
+                            case 'negate': negate(); break;
+                        }
+                    }
+                });
+            });
+
+            // Copiar resultado
+            if (btnCopiar) {
+                btnCopiar.addEventListener('click', function() {
+                    const rawText = displayVal.replace(',', '.');
+                    navigator.clipboard.writeText(rawText).then(() => {
+                        if (feedbackCopiado) {
+                            feedbackCopiado.classList.remove('d-none');
+                            setTimeout(() => {
+                                feedbackCopiado.classList.add('d-none');
+                            }, 2000);
+                        }
+                    }).catch(err => {
+                        console.error('Erro ao copiar:', err);
+                    });
+                });
+            }
+
+            // Suporte a teclado físico quando o modal estiver aberto
+            let isModalOpen = false;
+            if (modalCalcEl) {
+                modalCalcEl.addEventListener('shown.bs.modal', function() {
+                    isModalOpen = true;
+                });
+                modalCalcEl.addEventListener('hidden.bs.modal', function() {
+                    isModalOpen = false;
+                });
+            }
+
+            window.addEventListener('keydown', function(e) {
+                if (!isModalOpen) return;
+
+                if (e.key >= '0' && e.key <= '9') {
+                    e.preventDefault();
+                    inputDigit(e.key);
+                } else if (e.key === '.' || e.key === ',') {
+                    e.preventDefault();
+                    inputDecimal();
+                } else if (e.key === '+') {
+                    e.preventDefault();
+                    handleOperator('+');
+                } else if (e.key === '-') {
+                    e.preventDefault();
+                    handleOperator('-');
+                } else if (e.key === '*') {
+                    e.preventDefault();
+                    handleOperator('×');
+                } else if (e.key === '/') {
+                    e.preventDefault();
+                    handleOperator('÷');
+                } else if (e.key === 'Enter' || e.key === '=') {
+                    e.preventDefault();
+                    handleEquals();
+                } else if (e.key === '%') {
+                    e.preventDefault();
+                    handlePercent();
+                } else if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    backspace();
+                } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+                    // Se for C limpa, se for Esc limpa se houver valor ou fecha
+                    if (e.key === 'c' || e.key === 'C') {
+                        e.preventDefault();
+                        clearAll();
+                    }
+                }
+            });
+        })();
+
     });
 </script>
 {% endblock %}
