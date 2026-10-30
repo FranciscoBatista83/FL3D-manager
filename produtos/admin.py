@@ -9,7 +9,13 @@ produtos com filtros por material, marketplace e status ativo.
 """
 
 from django.contrib import admin
-from .models import Produto, Categoria
+from .models import Produto, Categoria, VariacaoProduto
+
+
+class VariacaoProdutoInline(admin.TabularInline):
+    model = VariacaoProduto
+    extra = 1
+    fields = ('nome', 'quantidade', 'custo_embalagem', 'custo_producao_total', 'margem_lucro', 'preco_venda', 'lucro_liquido')
 
 
 @admin.register(Categoria)
@@ -27,3 +33,4 @@ class ProdutoAdmin(admin.ModelAdmin):
     list_filter = ('ativo', 'categoria', 'material', 'marketplace')
     search_fields = ('nome', 'codigo', 'descricao')
     list_per_page = 20
+    inlines = [VariacaoProdutoInline]

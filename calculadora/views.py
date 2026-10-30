@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 import json
 
 from . import services
-from produtos.models import Produto, Categoria
+from produtos.models import Produto, Categoria, VariacaoProduto
 
 
 def index(request):
@@ -34,6 +34,20 @@ def index(request):
                     'valor_kg': float(produto.valor_kg_filamento or 0)
                 }]
 
+            variacoes_lista = []
+            for var in produto.variacoes.all():
+                variacoes_lista.append({
+                    'id': var.id,
+                    'nome': var.nome,
+                    'quantidade': var.quantidade,
+                    'custo_embalagem': float(var.custo_embalagem or 0),
+                    'custo_producao_total': float(var.custo_producao_total or 0),
+                    'margem_lucro': float(var.margem_lucro or 0),
+                    'preco_venda': float(var.preco_venda or 0),
+                    'custo_taxas_marketplace': float(var.custo_taxas_marketplace or 0),
+                    'lucro_liquido': float(var.lucro_liquido or 0),
+                })
+
             dados_produto = {
                 'id': produto.id,
                 'nome': produto.nome or '',
@@ -48,6 +62,7 @@ def index(request):
                 'marketplace': produto.marketplace or 'direto',
                 'comissao_afiliado_percentual': float(produto.comissao_afiliado_percentual or 0),
                 'filamentos': filamentos_lista,
+                'variacoes': variacoes_lista,
             }
         except Exception:
             produto = None
@@ -177,6 +192,7 @@ def salvar_produto_api(request):
         custo_insumos = Decimal(str(data.get('custo_insumos', 0) or 0))
         custo_mao_de_obra = Decimal(str(data.get('custo_mao_de_obra', 0) or 0))
         custo_taxas_marketplace = Decimal(str(data.get('custo_taxas_marketplace', 0) or 0))
+        variacoes_data = data.get('variacoes', [])
 
         # Converte horas float em DurationField (timedelta)
         tempo_estimado = timedelta(hours=horas_impressao) if horas_impressao > 0 else None
@@ -200,6 +216,22 @@ def salvar_produto_api(request):
             produto.preco_venda = preco_venda
             produto.margem_lucro = margem_lucro
             produto.save()
+
+            # Sincroniza variações/pacotes do produto
+            produto.variacoes.all().delete()
+            for v in variacoes_data:
+                VariacaoProduto.objects.create(
+                    produto=produto,
+                    nome=v.get('nome') or f"Pacote com {v.get('quantidade', 1)} un",
+                    quantidade=int(v.get('quantidade', 1) or 1),
+                    sku_sufixo=v.get('sku_sufixo', ''),
+                    custo_embalagem=Decimal(str(v.get('custo_embalagem', 0) or 0)),
+                    custo_producao_total=Decimal(str(v.get('custo_producao_total', 0) or 0)),
+                    margem_lucro=Decimal(str(v.get('margem_lucro', 0) or 0)),
+                    preco_venda=Decimal(str(v.get('preco_venda', 0) or 0)),
+                    custo_taxas_marketplace=Decimal(str(v.get('custo_taxas_marketplace', 0) or 0)),
+                    lucro_liquido=Decimal(str(v.get('lucro_liquido', 0) or 0)),
+                )
 
             return JsonResponse({
                 'sucesso': True,
@@ -228,6 +260,21 @@ def salvar_produto_api(request):
                 margem_lucro=margem_lucro,
                 ativo=True
             )
+
+            # Salva as variações/pacotes criadas
+            for v in variacoes_data:
+                VariacaoProduto.objects.create(
+                    produto=produto,
+                    nome=v.get('nome') or f"Pacote com {v.get('quantidade', 1)} un",
+                    quantidade=int(v.get('quantidade', 1) or 1),
+                    sku_sufixo=v.get('sku_sufixo', ''),
+                    custo_embalagem=Decimal(str(v.get('custo_embalagem', 0) or 0)),
+                    custo_producao_total=Decimal(str(v.get('custo_producao_total', 0) or 0)),
+                    margem_lucro=Decimal(str(v.get('margem_lucro', 0) or 0)),
+                    preco_venda=Decimal(str(v.get('preco_venda', 0) or 0)),
+                    custo_taxas_marketplace=Decimal(str(v.get('custo_taxas_marketplace', 0) or 0)),
+                    lucro_liquido=Decimal(str(v.get('lucro_liquido', 0) or 0)),
+                )
 
             return JsonResponse({
                 'sucesso': True,

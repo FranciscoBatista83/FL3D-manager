@@ -202,6 +202,75 @@
     .calc-btn:active {
         transform: scale(0.94);
     }
+
+    /* Barra Compacta de Abas de Pacotes / Kits */
+    .pacotes-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+        scrollbar-width: thin;
+    }
+    .pacote-pill {
+        white-space: nowrap;
+        font-size: 0.78rem !important;
+        font-weight: 600;
+        padding: 5px 12px !important;
+        border-radius: 20px;
+        border: 1px solid rgba(73, 47, 156, 0.25);
+        background: #ffffff;
+        color: #2d1b69;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .pacote-pill:hover {
+        background: #f1edfa;
+        color: #2d1b69;
+    }
+    .pacote-pill.active {
+        background: linear-gradient(135deg, #2d1b69 0%, #492f9c 100%);
+        color: #ffffff;
+        border-color: #2d1b69;
+        box-shadow: 0 2px 8px rgba(73, 47, 156, 0.3);
+    }
+    .pacote-pill .btn-del-pacote {
+        font-size: 0.72rem;
+        opacity: 0.7;
+        margin-left: 2px;
+        cursor: pointer;
+    }
+    .pacote-pill .btn-del-pacote:hover {
+        opacity: 1;
+        color: #ff5252;
+    }
+    .btn-add-pacote-pill {
+        white-space: nowrap;
+        font-size: 0.78rem !important;
+        font-weight: 600;
+        padding: 5px 10px !important;
+        border-radius: 20px;
+        border: 1px dashed #492f9c;
+        background: transparent;
+        color: #492f9c;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .btn-add-pacote-pill:hover {
+        background: #ede7f6;
+    }
+    .painel-pacote-config {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 8px;
+    }
+
 </style>
 {% endblock %}
 
@@ -411,9 +480,15 @@
                     <div class="row g-3 align-items-center">
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-dark">Margem Desejada (%)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control calc-input" id="margem_alvo" min="0" max="95" placeholder="Ex: 40" value="{% if produto %}{{ produto.margem_lucro }}{% endif %}">
-                                <span class="input-group-text">%</span>
+                            <div class="input-group" style="max-width: 220px;">
+                                <button type="button" class="btn btn-outline-secondary px-2" id="btnDecrementarMargem" title="Diminuir 1%">
+                                    <i class="bi bi-dash-lg"></i>
+                                </button>
+                                <input type="number" class="form-control calc-input text-center fw-bold" id="margem_alvo" min="0" max="95" step="1" placeholder="40" value="{% if produto %}{{ produto.margem_lucro }}{% else %}40{% endif %}">
+                                <span class="input-group-text px-2">%</span>
+                                <button type="button" class="btn btn-outline-secondary px-2" id="btnIncrementarMargem" title="Aumentar 1%">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
                             </div>
                             <small class="text-muted">Margem líquida desejada sobre o preço de venda final.</small>
                         </div>
@@ -426,13 +501,50 @@
         <!-- COLUNA DA DIREITA: RESULTADOS (STICKY) -->
         <div class="col-lg-5">
             <div class="sticky-top" style="top: 20px; z-index: 10;">
+                <!-- BARRA DE ABAS: UNIDADE PRINCIPAL E PACOTES / KITS -->
+                <div class="pacotes-bar" id="pacotesBar">
+                    <button type="button" class="pacote-pill active" data-pacote-idx="-1" id="pill-base">
+                        <i class="bi bi-box me-1"></i>1 un (Principal)
+                    </button>
+                    <!-- Pills de Pacotes inseridas dinamicamente aqui -->
+                    <button type="button" class="btn-add-pacote-pill" id="btnAddPacoteModal" title="Criar pacote / kit por quantidade">
+                        <i class="bi bi-plus-circle me-1"></i>+ Pacote
+                    </button>
+                </div>
+
                 <div class="resultado-card">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-uppercase small fw-bold text-white-50">Preço Sugerido de Venda</span>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>
+                            <span class="text-uppercase small fw-bold text-white-50" id="res-titulo-bloco">Preço Sugerido de Venda</span>
+                            <span class="badge bg-warning text-dark ms-1 d-none" id="badge-pacote-qtd" style="font-size:0.75rem;">5 un</span>
+                        </div>
                         <span class="badge badge-market px-3 py-1.5" id="badge-canal">Venda Direta</span>
                     </div>
-                    <div class="val-destaque mb-2" id="res-preco-venda">R$ 0,00</div>
-                    <p class="text-white-50 mb-0 small">Preço sugerido calculado para cobrir custos e atingir a margem desejada.</p>
+                    <div class="val-destaque mb-1" id="res-preco-venda">R$ 0,00</div>
+                    <div class="small text-white-50 mb-2" id="res-preco-unitario-equiv" style="display: none;">
+                        <i class="bi bi-tag-fill me-1 text-warning"></i>Equivalente a <strong class="text-white" id="val-unitario-equiv">R$ 0,00</strong> por unidade
+                    </div>
+                    <p class="text-white-50 mb-0 small" id="res-subtexto-card">Preço sugerido calculado para cobrir custos e atingir a margem desejada.</p>
+
+                    <!-- PAINEL COMPACTO ESPECÍFICO DE CONFIGURAÇÃO DO PACOTE ATIVO -->
+                    <div id="painelConfigPacote" class="painel-pacote-config" style="display: none;">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-6">
+                                <label class="small text-white-50 mb-1 d-block fw-bold" style="font-size:0.75rem;">Margem do Kit (%)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" class="form-control form-control-sm text-center fw-bold" id="inputPacoteMargem" min="0" max="95" placeholder="40">
+                                    <span class="input-group-text py-0">%</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-white-50 mb-1 d-block fw-bold" style="font-size:0.75rem;">Embalagem Kit (R$)</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text py-0">R$</span>
+                                    <input type="number" step="0.1" class="form-control form-control-sm text-center fw-bold" id="inputPacoteEmbalagem" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- CARD DETALHAMENTO DE CUSTOS -->
@@ -602,6 +714,63 @@
                     </span>
                     <button type="button" class="btn btn-sm text-white-50" data-bs-dismiss="modal">Fechar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal Compacto: Adicionar Pacote / Kit -->
+<div class="modal fade" id="modalAddPacote" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 330px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header py-2 px-3" style="background: linear-gradient(135deg, #2d1b69 0%, #492f9c 100%); color: #fff; border-radius: 16px 16px 0 0;">
+                <h6 class="modal-title mb-0 fw-bold"><i class="bi bi-boxes me-2 text-warning"></i>Novo Pacote / Kit</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="mb-2">
+                    <label class="form-label small fw-bold text-dark mb-1">Quantidade de Peças no Kit</label>
+                    <div class="d-flex gap-1 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary flex-fill btn-quick-qtd" data-qtd="5">5 un</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary flex-fill btn-quick-qtd" data-qtd="10">10 un</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary flex-fill btn-quick-qtd" data-qtd="20">20 un</button>
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-123"></i></span>
+                        <input type="number" min="2" max="1000" class="form-control" id="modalQtdPacote" placeholder="Outra quantidade (ex: 15)">
+                        <span class="input-group-text">peças</span>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold text-dark mb-1">Nome do Pacote (opcional)</label>
+                    <input type="text" class="form-control form-control-sm" id="modalNomePacote" placeholder="Ex: Pacote com 5 un, Kit Atacado 10">
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-dark mb-1">Margem Alvo (%)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" min="0" max="95" class="form-control" id="modalMargemPacote" placeholder="Ex: 35">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-dark mb-1">Embalagem (R$)</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" step="0.1" class="form-control" id="modalEmbalagemPacote" placeholder="Ex: 2.00">
+                        </div>
+                    </div>
+                </div>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">
+                    <i class="bi bi-info-circle me-1"></i>O material e energia serão proporcionais à quantidade.
+                </small>
+            </div>
+            <div class="modal-footer py-2 px-3 bg-light" style="border-radius: 0 0 16px 16px;">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-primary fw-bold px-3" id="btnConfirmarCriarPacote">
+                    <i class="bi bi-check-lg me-1"></i>Criar Pacote
+                </button>
             </div>
         </div>
     </div>
@@ -828,6 +997,359 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
         }
 
+
+        // ==========================================
+        // GERENCIAMENTO DE PACOTES / KITS (ABAS COMPACTAS)
+        // ==========================================
+        let listaPacotes = [];
+        let pacoteAtivoIndex = -1; // -1 significa Unidade Principal (1 un)
+
+        // Se estiver editando produto existente, carregar as variações salvas
+        if (dadosEdicao && dadosEdicao.variacoes && dadosEdicao.variacoes.length > 0) {
+            listaPacotes = dadosEdicao.variacoes.map(v => ({
+                id: v.id,
+                nome: v.nome,
+                quantidade: parseInt(v.quantidade) || 1,
+                sku_sufixo: v.sku_sufixo || '',
+                margem_lucro: parseFloat(v.margem_lucro) || 35,
+                custo_embalagem: parseFloat(v.custo_embalagem) || 0,
+                calculo: null
+            }));
+        }
+
+        const pacotesBar = document.getElementById('pacotesBar');
+        const pillBase = document.getElementById('pill-base');
+        const btnAddPacoteModal = document.getElementById('btnAddPacoteModal');
+        const modalAddPacoteEl = document.getElementById('modalAddPacote');
+        const modalAddPacote = modalAddPacoteEl ? new bootstrap.Modal(modalAddPacoteEl) : null;
+        const painelConfigPacote = document.getElementById('painelConfigPacote');
+        const inputPacoteMargem = document.getElementById('inputPacoteMargem');
+        const inputPacoteEmbalagem = document.getElementById('inputPacoteEmbalagem');
+        const badgePacoteQtd = document.getElementById('badge-pacote-qtd');
+        const resPrecoUnitarioEquiv = document.getElementById('res-preco-unitario-equiv');
+        const valUnitarioEquiv = document.getElementById('val-unitario-equiv');
+        const resTituloBloco = document.getElementById('res-titulo-bloco');
+
+        // Renderiza as pills de pacotes na barra horizontal
+        function renderizarPillsPacotes() {
+            // Remove pills anteriores (exceto pill-base e btn-add)
+            pacotesBar.querySelectorAll('.pacote-pill-dinamica').forEach(p => p.remove());
+
+            listaPacotes.forEach((pacote, idx) => {
+                const pill = document.createElement('button');
+                pill.type = 'button';
+                pill.className = `pacote-pill pacote-pill-dinamica ${pacoteAtivoIndex === idx ? 'active' : ''}`;
+                pill.dataset.pacoteIdx = idx;
+                pill.innerHTML = `
+                    <i class="bi bi-boxes me-1"></i>${pacote.nome}
+                    <span class="btn-del-pacote" data-del-idx="${idx}" title="Excluir pacote">&times;</span>
+                `;
+                
+                pill.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('btn-del-pacote')) {
+                        e.stopPropagation();
+                        removerPacote(idx);
+                        return;
+                    }
+                    selecionarAbaPacote(idx);
+                });
+
+                pacotesBar.insertBefore(pill, btnAddPacoteModal);
+            });
+
+            // Atualiza classe ativa na base
+            if (pacoteAtivoIndex === -1) {
+                pillBase.classList.add('active');
+            } else {
+                pillBase.classList.remove('active');
+            }
+        }
+
+        function selecionarAbaPacote(idx) {
+            pacoteAtivoIndex = idx;
+            renderizarPillsPacotes();
+            atualizarExibicaoResultados();
+        }
+
+        pillBase.addEventListener('click', function() {
+            selecionarAbaPacote(-1);
+        });
+
+        // Abrir modal de novo pacote
+        if (btnAddPacoteModal && modalAddPacote) {
+            btnAddPacoteModal.addEventListener('click', function() {
+                document.getElementById('modalQtdPacote').value = '';
+                document.getElementById('modalNomePacote').value = '';
+                const margemAtual = parseFloat(document.getElementById('margem_alvo').value) || 40;
+                document.getElementById('modalMargemPacote').value = Math.max(10, margemAtual - 5);
+                
+                const embalagemUnit = parseFloat(document.getElementById('custo_embalagem').value) || 0;
+                document.getElementById('modalEmbalagemPacote').value = (embalagemUnit * 1.5).toFixed(2);
+                
+                modalAddPacote.show();
+            });
+        }
+
+        // Botões de atalho 5, 10, 20 un no modal
+        document.querySelectorAll('.btn-quick-qtd').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const q = this.dataset.qtd;
+                document.getElementById('modalQtdPacote').value = q;
+                document.getElementById('modalNomePacote').value = `Pacote com ${q} un`;
+            });
+        });
+
+        // Confirmar criação do pacote no modal
+        const btnConfirmarCriarPacote = document.getElementById('btnConfirmarCriarPacote');
+        if (btnConfirmarCriarPacote) {
+            btnConfirmarCriarPacote.addEventListener('click', function() {
+                const qtd = parseInt(document.getElementById('modalQtdPacote').value);
+                if (!qtd || qtd < 2) {
+                    alert('Por favor, informe uma quantidade válida (mínimo 2 peças).');
+                    document.getElementById('modalQtdPacote').focus();
+                    return;
+                }
+
+                let nome = document.getElementById('modalNomePacote').value.trim();
+                if (!nome) {
+                    nome = `Pacote com ${qtd} un`;
+                }
+
+                const margem = parseFloat(document.getElementById('modalMargemPacote').value) || 35;
+                const embalagem = parseFloat(document.getElementById('modalEmbalagemPacote').value) || 0;
+
+                listaPacotes.push({
+                    nome: nome,
+                    quantidade: qtd,
+                    sku_sufixo: `-KIT${qtd}`,
+                    margem_lucro: margem,
+                    custo_embalagem: embalagem,
+                    calculo: null
+                });
+
+                modalAddPacote.hide();
+                selecionarAbaPacote(listaPacotes.length - 1);
+                executarCalculo();
+            });
+        }
+
+        function removerPacote(idx) {
+            if (confirm(`Deseja remover o pacote "${listaPacotes[idx].nome}"?`)) {
+                listaPacotes.splice(idx, 1);
+                if (pacoteAtivoIndex >= listaPacotes.length) {
+                    pacoteAtivoIndex = listaPacotes.length - 1;
+                }
+                renderizarPillsPacotes();
+                atualizarExibicaoResultados();
+            }
+        }
+
+        // Alterações nos mini-inputs do pacote ativo
+        if (inputPacoteMargem) {
+            inputPacoteMargem.addEventListener('input', function() {
+                if (pacoteAtivoIndex >= 0 && listaPacotes[pacoteAtivoIndex]) {
+                    listaPacotes[pacoteAtivoIndex].margem_lucro = parseFloat(this.value) || 0;
+                    executarCalculo();
+                }
+            });
+        }
+        if (inputPacoteEmbalagem) {
+            inputPacoteEmbalagem.addEventListener('input', function() {
+                if (pacoteAtivoIndex >= 0 && listaPacotes[pacoteAtivoIndex]) {
+                    listaPacotes[pacoteAtivoIndex].custo_embalagem = parseFloat(this.value) || 0;
+                    executarCalculo();
+                }
+            });
+        }
+
+        // Calcula os dados de um pacote específico com base no custo unitário
+        function calcularPacote(pacote, dadosBase) {
+            if (!dadosBase || !pacote) return null;
+            const Q = pacote.quantidade || 1;
+            
+            // Filamento, energia, insumos e mão de obra multiplicam por Q
+            const filamentoTotal = (dadosBase.custo_producao.filamento || 0) * Q;
+            const energiaTotal = (dadosBase.custo_producao.energia || 0) * Q;
+            const insumosTotal = (dadosBase.custo_producao.insumos || 0) * Q;
+            const maoDeObraTotal = (dadosBase.custo_producao.mao_de_obra || 0) * Q;
+            const embalagemTotal = pacote.custo_embalagem;
+
+            const custoProducaoTotal = filamentoTotal + energiaTotal + insumosTotal + maoDeObraTotal + embalagemTotal;
+            const margemAlvo = pacote.margem_lucro;
+
+            // Recalcula o preço de venda para o pacote inteiro usando as taxas do canal
+            let precoVenda = 0;
+            let taxasTotal = 0;
+            let detalheTaxas = {};
+
+            let afiliadoPct = 0;
+            if (selectedMarketplace === 'shopee') {
+                afiliadoPct = parseFloat(document.getElementById('afiliado_percentual_shopee').value) || 0;
+            } else if (selectedMarketplace === 'tiktok') {
+                afiliadoPct = parseFloat(document.getElementById('afiliado_percentual_tiktok').value) || 0;
+            }
+
+            // Simulação de preço reverso no cliente para o pacote
+            const margemFrac = Math.min(0.95, margemAlvo / 100);
+            if (selectedMarketplace === 'direto' || margemFrac <= 0) {
+                precoVenda = margemFrac < 1 ? custoProducaoTotal / (1 - margemFrac) : custoProducaoTotal;
+            } else if (selectedMarketplace === 'shopee') {
+                // Cálculo Shopee: Comissão proporcional + taxa fixa por item + afiliado
+                let p = custoProducaoTotal * (1 + margemFrac) * 1.25;
+                for (let i = 0; i < 25; i++) {
+                    let taxaPct = p < 80 ? 0.20 : 0.14;
+                    let taxaFixa = p < 9 ? (p * 0.5) : (p <= 79.99 ? 4.50 : (p <= 99.99 ? 16.00 : (p <= 199.99 ? 20.00 : 26.00)));
+                    let comissaoPct = p * taxaPct;
+                    let comissaoAfil = p * (afiliadoPct / 100);
+                    let taxas = comissaoPct + taxaFixa + comissaoAfil;
+                    let lucro = p * margemFrac;
+                    let novoP = custoProducaoTotal + taxas + lucro;
+                    if (Math.abs(novoP - p) < 0.01) { p = novoP; break; }
+                    p = novoP;
+                }
+                precoVenda = p;
+                let taxaPct = precoVenda < 80 ? 0.20 : 0.14;
+                let taxaFixa = precoVenda < 9 ? (precoVenda * 0.5) : (precoVenda <= 79.99 ? 4.50 : (precoVenda <= 99.99 ? 16.00 : (precoVenda <= 199.99 ? 20.00 : 26.00)));
+                detalheTaxas = {
+                    percentual: taxaPct * 100,
+                    comissao_percentual_valor: precoVenda * taxaPct,
+                    taxa_fixa: taxaFixa,
+                    comissao_afiliado: precoVenda * (afiliadoPct / 100)
+                };
+                taxasTotal = detalheTaxas.comissao_percentual_valor + detalheTaxas.taxa_fixa + detalheTaxas.comissao_afiliado;
+            } else if (selectedMarketplace === 'tiktok') {
+                let p = custoProducaoTotal * (1 + margemFrac) * 1.15;
+                for (let i = 0; i < 25; i++) {
+                    let taxas = (p * 0.05) + 2.00 + (p * (afiliadoPct / 100));
+                    let lucro = p * margemFrac;
+                    let novoP = custoProducaoTotal + taxas + lucro;
+                    if (Math.abs(novoP - p) < 0.01) { p = novoP; break; }
+                    p = novoP;
+                }
+                precoVenda = p;
+                detalheTaxas = {
+                    percentual: 5,
+                    comissao_percentual_valor: precoVenda * 0.05,
+                    taxa_fixa: 2.00,
+                    comissao_afiliado: precoVenda * (afiliadoPct / 100)
+                };
+                taxasTotal = detalheTaxas.comissao_percentual_valor + detalheTaxas.taxa_fixa + detalheTaxas.comissao_afiliado;
+            }
+
+            precoVenda = Math.round(precoVenda * 100) / 100;
+            const lucroLiquido = Math.round((precoVenda - custoProducaoTotal - taxasTotal) * 100) / 100;
+            const margemReal = precoVenda > 0 ? Math.round((lucroLiquido / precoVenda) * 10000) / 100 : 0;
+
+            return {
+                preco_venda: precoVenda,
+                preco_unitario: Math.round((precoVenda / Q) * 100) / 100,
+                custo_producao: {
+                    filamento: filamentoTotal,
+                    energia: energiaTotal,
+                    embalagem: embalagemTotal,
+                    insumos: insumosTotal,
+                    mao_de_obra: maoDeObraTotal,
+                    total: custoProducaoTotal
+                },
+                taxas_marketplace: {
+                    total: taxasTotal,
+                    detalhe: detalheTaxas
+                },
+                lucro_liquido: lucroLiquido,
+                margem_real: margemReal
+            };
+        }
+
+        function atualizarExibicaoResultados() {
+            if (!dadosUltimoCalculo) return;
+
+            // Recalcula todos os pacotes
+            listaPacotes.forEach(p => {
+                p.calculo = calcularPacote(p, dadosUltimoCalculo);
+            });
+
+            if (pacoteAtivoIndex === -1) {
+                // EXIBINDO UNIDADE PRINCIPAL (1 un)
+                painelConfigPacote.style.display = 'none';
+                badgePacoteQtd.classList.add('d-none');
+                resPrecoUnitarioEquiv.style.display = 'none';
+                resTituloBloco.textContent = 'Preço Sugerido de Venda';
+
+                document.getElementById('res-preco-venda').textContent = formatarMoeda(dadosUltimoCalculo.preco_venda);
+                document.getElementById('res-filamento').textContent = formatarMoeda(dadosUltimoCalculo.custo_producao.filamento);
+                document.getElementById('res-energia').textContent = formatarMoeda(dadosUltimoCalculo.custo_producao.energia);
+                document.getElementById('res-embalagem').textContent = formatarMoeda(dadosUltimoCalculo.custo_producao.embalagem);
+                
+                const insumosMo = parseFloat(dadosUltimoCalculo.custo_producao.insumos) + parseFloat(dadosUltimoCalculo.custo_producao.mao_de_obra);
+                document.getElementById('res-insumos-mo').textContent = formatarMoeda(insumosMo);
+                
+                document.getElementById('res-custo-total').textContent = formatarMoeda(dadosUltimoCalculo.custo_producao.total);
+                document.getElementById('res-taxas').textContent = formatarMoeda(dadosUltimoCalculo.taxas_marketplace.total);
+
+                exibirDetalheTaxas(dadosUltimoCalculo.taxas_marketplace);
+                document.getElementById('res-lucro-liquido').textContent = formatarMoeda(dadosUltimoCalculo.lucro_liquido);
+                document.getElementById('res-margem-real').textContent = dadosUltimoCalculo.margem_real + '%';
+            } else {
+                // EXIBINDO PACOTE / KIT ATIVO
+                const pacote = listaPacotes[pacoteAtivoIndex];
+                if (!pacote || !pacote.calculo) return;
+                const c = pacote.calculo;
+
+                painelConfigPacote.style.display = 'block';
+                inputPacoteMargem.value = pacote.margem_lucro;
+                inputPacoteEmbalagem.value = pacote.custo_embalagem;
+
+                badgePacoteQtd.textContent = `${pacote.quantidade} un`;
+                badgePacoteQtd.classList.remove('d-none');
+
+                resPrecoUnitarioEquiv.style.display = 'block';
+                valUnitarioEquiv.textContent = formatarMoeda(c.preco_unitario);
+                resTituloBloco.textContent = `Preço Sugerido (${pacote.nome})`;
+
+                document.getElementById('res-preco-venda').textContent = formatarMoeda(c.preco_venda);
+                document.getElementById('res-filamento').textContent = formatarMoeda(c.custo_producao.filamento);
+                document.getElementById('res-energia').textContent = formatarMoeda(c.custo_producao.energia);
+                document.getElementById('res-embalagem').textContent = formatarMoeda(c.custo_producao.embalagem);
+                
+                const insumosMo = parseFloat(c.custo_producao.insumos) + parseFloat(c.custo_producao.mao_de_obra);
+                document.getElementById('res-insumos-mo').textContent = formatarMoeda(insumosMo);
+                
+                document.getElementById('res-custo-total').textContent = formatarMoeda(c.custo_producao.total);
+                document.getElementById('res-taxas').textContent = formatarMoeda(c.taxas_marketplace.total);
+
+                exibirDetalheTaxas(c.taxas_marketplace);
+                document.getElementById('res-lucro-liquido').textContent = formatarMoeda(c.lucro_liquido);
+                document.getElementById('res-margem-real').textContent = c.margem_real + '%';
+            }
+        }
+
+        function exibirDetalheTaxas(taxasData) {
+            const detalhe = taxasData.detalhe || {};
+            const detalheEl = document.getElementById('detalhe-marketplace');
+            const linhaAfiliado = document.getElementById('linha-afiliado');
+
+            if (selectedMarketplace !== 'direto' && parseFloat(taxasData.total) > 0) {
+                detalheEl.style.display = 'block';
+                const pct = parseFloat(detalhe.percentual || 0).toFixed(0);
+                document.getElementById('res-taxa-percentual-label').textContent = '(' + pct + '%)';
+                document.getElementById('res-comissao-pct').textContent = formatarMoeda(detalhe.comissao_percentual_valor || 0);
+                document.getElementById('res-taxa-fixa').textContent = formatarMoeda(detalhe.taxa_fixa || 0);
+
+                const valorAfiliado = parseFloat(detalhe.comissao_afiliado || 0);
+                if (valorAfiliado > 0) {
+                    linhaAfiliado.style.display = 'flex';
+                    document.getElementById('res-comissao-afiliado').textContent = formatarMoeda(valorAfiliado);
+                } else {
+                    linhaAfiliado.style.display = 'none';
+                }
+            } else {
+                detalheEl.style.display = 'none';
+            }
+        }
+
+        // Renderização inicial das pills
+        renderizarPillsPacotes();
+
         function executarCalculo() {
             const filamentos = [];
             let pesoTotal = 0;
@@ -909,9 +1431,36 @@
                     }
                     document.getElementById('res-lucro-liquido').textContent = formatarMoeda(data.lucro_liquido);
                     document.getElementById('res-margem-real').textContent = data.margem_real + '%';
+                    atualizarExibicaoResultados();
                 }
             })
             .catch(err => console.error("Erro no cálculo:", err));
+        }
+
+
+        // Botões de Incrementar / Decrementar Margem (+1% / -1%)
+        const btnIncMargem = document.getElementById('btnIncrementarMargem');
+        const btnDecMargem = document.getElementById('btnDecrementarMargem');
+        const inputMargemAlvo = document.getElementById('margem_alvo');
+
+        if (btnIncMargem && inputMargemAlvo) {
+            btnIncMargem.addEventListener('click', function() {
+                let val = parseFloat(inputMargemAlvo.value) || 0;
+                if (val < 95) {
+                    inputMargemAlvo.value = Math.round(val + 1);
+                    executarCalculo();
+                }
+            });
+        }
+
+        if (btnDecMargem && inputMargemAlvo) {
+            btnDecMargem.addEventListener('click', function() {
+                let val = parseFloat(inputMargemAlvo.value) || 0;
+                if (val > 0) {
+                    inputMargemAlvo.value = Math.round(val - 1);
+                    executarCalculo();
+                }
+            });
         }
 
         // Executar cálculo logo na abertura
@@ -1131,7 +1680,19 @@
                     custo_embalagem: parseFloat(document.getElementById('custo_embalagem').value) || 0,
                     custo_insumos: parseFloat(document.getElementById('custo_insumos').value) || 0,
                     custo_mao_de_obra: parseFloat(document.getElementById('custo_mao_de_obra').value) || 0,
-                    custo_taxas_marketplace: dadosUltimoCalculo ? dadosUltimoCalculo.taxas_marketplace.total : 0
+                    custo_taxas_marketplace: dadosUltimoCalculo ? dadosUltimoCalculo.taxas_marketplace.total : 0,
+                    variacoes: listaPacotes.map(p => ({
+                        id: p.id || null,
+                        nome: p.nome,
+                        quantidade: p.quantidade,
+                        sku_sufixo: p.sku_sufixo || '',
+                        custo_embalagem: p.custo_embalagem || 0,
+                        custo_producao_total: p.calculo ? p.calculo.custo_producao.total : 0,
+                        margem_lucro: p.margem_lucro || 0,
+                        preco_venda: p.calculo ? p.calculo.preco_venda : 0,
+                        custo_taxas_marketplace: p.calculo ? p.calculo.taxas_marketplace.total : 0,
+                        lucro_liquido: p.calculo ? p.calculo.lucro_liquido : 0
+                    }))
                 };
 
                 fetch('{% url "calculadora:salvar_produto_api" %}', {
@@ -1159,9 +1720,67 @@
                     btnSalvarProduto.innerHTML = btnOriginalText;
                 });
             } else {
-                // Modo Criação: Redireciona para produtos:novo
-                const params = montarParamsRedirecionamento();
-                window.location.href = '{% url "produtos:novo" %}?' + params.toString();
+                // Modo Criação: Salva via API com produto + variações
+                const btnOriginalText = btnSalvarProduto.innerHTML;
+                btnSalvarProduto.disabled = true;
+                btnSalvarProduto.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
+
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const payload = {
+                    nome: nome,
+                    categoria_id: document.getElementById('categoria_id').value || null,
+                    peso_g: window.pesoTotalEstimado || 0,
+                    horas_impressao: getHorasDecimal(),
+                    custo_total: dadosUltimoCalculo ? dadosUltimoCalculo.custo_producao.total : 0,
+                    preco_venda: dadosUltimoCalculo ? dadosUltimoCalculo.preco_venda : 0,
+                    margem_lucro: dadosUltimoCalculo ? dadosUltimoCalculo.margem_real : (parseFloat(document.getElementById('margem_alvo').value) || 0),
+                    marketplace: selectedMarketplace,
+                    afiliado_percentual: afiliadoPercentual,
+                    detalhes_filamentos: window.filamentosAtuais || [],
+                    potencia_w: parseFloat(document.getElementById('potencia_w').value) || 150,
+                    kwh_preco: parseFloat(document.getElementById('kwh_preco').value) || 0.85,
+                    custo_embalagem: parseFloat(document.getElementById('custo_embalagem').value) || 0,
+                    custo_insumos: parseFloat(document.getElementById('custo_insumos').value) || 0,
+                    custo_mao_de_obra: parseFloat(document.getElementById('custo_mao_de_obra').value) || 0,
+                    custo_taxas_marketplace: dadosUltimoCalculo ? dadosUltimoCalculo.taxas_marketplace.total : 0,
+                    variacoes: listaPacotes.map(p => ({
+                        id: null,
+                        nome: p.nome,
+                        quantidade: p.quantidade,
+                        sku_sufixo: p.sku_sufixo || '',
+                        custo_embalagem: p.custo_embalagem || 0,
+                        custo_producao_total: p.calculo ? p.calculo.custo_producao.total : 0,
+                        margem_lucro: p.margem_lucro || 0,
+                        preco_venda: p.calculo ? p.calculo.preco_venda : 0,
+                        custo_taxas_marketplace: p.calculo ? p.calculo.taxas_marketplace.total : 0,
+                        lucro_liquido: p.calculo ? p.calculo.lucro_liquido : 0
+                    }))
+                };
+
+                fetch('{% url "calculadora:salvar_produto_api" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        alert("Erro ao salvar: " + (data.erro || 'Desconhecido'));
+                        btnSalvarProduto.disabled = false;
+                        btnSalvarProduto.innerHTML = btnOriginalText;
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro na requisição:", err);
+                    alert("Erro ao se comunicar com o servidor.");
+                    btnSalvarProduto.disabled = false;
+                    btnSalvarProduto.innerHTML = btnOriginalText;
+                });
             }
         });
 

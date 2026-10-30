@@ -87,3 +87,45 @@ class Produto(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class VariacaoProduto(models.Model):
+    """
+    Pacotes e variações por quantidade de um mesmo produto (ex: 5 un, 10 un, 20 un).
+    Permite precificação em lote com margens, embalagens e taxas de marketplace próprias.
+    """
+    produto = models.ForeignKey(
+        Produto,
+        on_delete=models.CASCADE,
+        related_name='variacoes',
+        verbose_name='Produto Principal'
+    )
+    nome = models.CharField('Nome da Variação / Pacote', max_length=100, help_text='Ex: Pacote com 5 un, Kit Atacado 20 un')
+    quantidade = models.PositiveIntegerField('Quantidade de Peças', default=1)
+    sku_sufixo = models.CharField('Sufixo SKU', max_length=30, blank=True, null=True, help_text='Ex: -KIT5, -KIT10')
+
+    custo_embalagem = models.DecimalField('Custo de Embalagem (R$)', max_digits=10, decimal_places=2, default=0.00)
+    custo_producao_total = models.DecimalField('Custo de Produção Total (R$)', max_digits=10, decimal_places=2, default=0.00)
+
+    margem_lucro = models.DecimalField('Margem de Lucro Alvo (%)', max_digits=6, decimal_places=2, default=0.00)
+    preco_venda = models.DecimalField('Preço de Venda do Pacote (R$)', max_digits=10, decimal_places=2, default=0.00)
+    custo_taxas_marketplace = models.DecimalField('Taxas do Marketplace (R$)', max_digits=10, decimal_places=2, default=0.00)
+    lucro_liquido = models.DecimalField('Lucro Líquido (R$)', max_digits=10, decimal_places=2, default=0.00)
+
+    criado_em = models.DateTimeField('Criado em', auto_now_add=True)
+    atualizado_em = models.DateTimeField('Atualizado em', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Variação / Pacote'
+        verbose_name_plural = 'Variações / Pacotes'
+        ordering = ['quantidade', 'preco_venda']
+
+    def __str__(self):
+        return f"{self.produto.nome} - {self.nome} ({self.quantidade} un)"
+
+    @property
+    def preco_unitario(self):
+        """Preço por unidade dentro do pacote."""
+        if self.quantidade and self.quantidade > 0:
+            return round(self.preco_venda / self.quantidade, 2)
+        return self.preco_venda
