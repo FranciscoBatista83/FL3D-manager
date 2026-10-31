@@ -88,6 +88,11 @@ class Produto(models.Model):
     def __str__(self):
         return self.nome
 
+    @property
+    def lucro_liquido_unitario(self):
+        """Lucro líquido estimado da unidade base (preco_venda - custo_estimado)."""
+        return round(self.preco_venda - self.custo_estimado, 2)
+
 
 class VariacaoProduto(models.Model):
     """
