@@ -90,8 +90,8 @@ class Produto(models.Model):
 
     @property
     def lucro_liquido_unitario(self):
-        """Lucro líquido estimado da unidade base (preco_venda - custo_estimado)."""
-        return round(self.preco_venda - self.custo_estimado, 2)
+        """Lucro líquido da unidade base (preco_venda - custo_estimado - custo_taxas_marketplace)."""
+        return round(self.preco_venda - self.custo_estimado - self.custo_taxas_marketplace, 2)
 
 
 class VariacaoProduto(models.Model):
