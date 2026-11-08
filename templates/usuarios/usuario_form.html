@@ -5,7 +5,7 @@
 
 {% block page_actions %}
 <a href="{% url 'usuarios:lista' %}" class="btn btn-sm"
-   style="background:rgba(45,27,105,0.10);color:#2D1B69;border-radius:8px;font-weight:600;border:none;">
+   style="background:rgba(30,27,75,0.10);color:#1E1B4B;border-radius:8px;font-weight:600;border:none;">
     <i class="bi bi-arrow-left me-1"></i> Voltar
 </a>
 {% endblock %}
@@ -15,12 +15,12 @@
     .form-card {
         border-radius: 16px;
         border: none;
-        box-shadow: 0 4px 18px rgba(45,27,105,0.10);
+        box-shadow: 0 4px 18px rgba(30,27,75,0.10);
         background: #fff;
         max-width: 680px;
     }
     .form-card .card-header {
-        background: linear-gradient(135deg, #2D1B69, #A0155A);
+        background: linear-gradient(135deg, #1E1B4B, #6366F1);
         border-radius: 16px 16px 0 0;
         padding: 1.25rem 1.5rem;
     }
@@ -46,8 +46,8 @@
         transition: border-color 0.2s, box-shadow 0.2s;
     }
     .form-control:focus, .form-select:focus {
-        border-color: #7B2D8B;
-        box-shadow: 0 0 0 3px rgba(123,45,139,0.12);
+        border-color: #6366F1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
         outline: none;
     }
     .form-text {
@@ -58,15 +58,15 @@
         font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: #A0155A;
+        color: #6366F1;
         font-weight: 700;
-        border-bottom: 1px solid rgba(160,21,90,0.15);
+        border-bottom: 1px solid rgba(99,102,241,0.15);
         padding-bottom: 6px;
         margin-bottom: 1rem;
         margin-top: 1.5rem;
     }
     .btn-salvar {
-        background: linear-gradient(135deg, #2D1B69, #A0155A);
+        background: linear-gradient(135deg, #1E1B4B, #6366F1);
         color: #fff;
         border: none;
         border-radius: 10px;
@@ -81,8 +81,8 @@
         color: #fff;
     }
     .btn-cancelar {
-        background: rgba(45,27,105,0.08);
-        color: #2D1B69;
+        background: rgba(30,27,75,0.08);
+        color: #1E1B4B;
         border: none;
         border-radius: 10px;
         padding: 10px 22px;
@@ -91,11 +91,11 @@
         text-decoration: none;
         transition: background 0.15s;
     }
-    .btn-cancelar:hover { background: rgba(45,27,105,0.15); color: #2D1B69; }
+    .btn-cancelar:hover { background: rgba(30,27,75,0.15); color: #1E1B4B; }
 
     .form-check-input:checked {
-        background-color: #A0155A;
-        border-color: #A0155A;
+        background-color: #6366F1;
+        border-color: #6366F1;
     }
     .invalid-feedback { font-size: 0.78rem; }
 
@@ -268,7 +268,7 @@
             </div>
             {% endif %}
 
-            <hr style="border-color:rgba(45,27,105,0.10);">
+            <hr style="border-color:rgba(30,27,75,0.10);">
             <div class="d-flex gap-3 align-items-center">
                 <button type="submit" class="btn-salvar">
                     <i class="bi bi-check-lg me-1"></i>{{ acao }}
