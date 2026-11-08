@@ -279,6 +279,25 @@
 <body>
 
     <!-- ================================================================
+         CONTROLE DE SESSÃO POR ABA (sessionStorage)
+         Se o usuário fechar a aba e reabrir, cai no login automaticamente.
+         O "crachá" (fl3d_active) só existe enquanto a aba estiver aberta.
+         ================================================================ -->
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('from_login') === '1') {
+                // Acabou de fazer login: registra o crachá e limpa o parâmetro da URL
+                sessionStorage.setItem('fl3d_active', '1');
+                history.replaceState({}, '', window.location.pathname);
+            } else if (!sessionStorage.getItem('fl3d_active')) {
+                // Aba nova ou reaberta sem login: redireciona para o login
+                window.location.replace('{% url "login" %}');
+            }
+        })();
+    </script>
+
+    <!-- ================================================================
          NAVBAR TOPO
          ================================================================ -->
     <header class="navbar-fl3d">
@@ -287,6 +306,11 @@
             <span>FL3D Manager</span>
         </a>
         <div class="nav-right">
+            {% if empresa_atual %}
+                <span class="badge" style="background: rgba(255,255,255,0.18); font-weight: 500; font-size: 0.82rem; padding: 6px 12px; border-radius: 20px;">
+                    <i class="bi bi-building me-1"></i>{{ empresa_atual.nome }}
+                </span>
+            {% endif %}
             <span><i class="bi bi-person-circle me-1"></i>Olá, {{ user.username }}</span>
             <form action="{% url 'logout' %}" method="post" class="d-inline">
                 {% csrf_token %}
@@ -376,12 +400,22 @@
         <!-- Seção sistema -->
         <div class="sidebar-heading">Sistema</div>
         <ul class="nav flex-column mb-3">
+            {% if is_master %}
+            <li class="nav-item">
+                <a class="nav-link {% if 'core' in request.resolver_match.app_names %}active{% endif %}"
+                   href="{% url 'core:empresas_lista' %}">
+                    <i class="bi bi-building-gear"></i> Empresas (Master)
+                </a>
+            </li>
+            {% endif %}
+            {% if is_gestor %}
             <li class="nav-item">
                 <a class="nav-link {% if 'usuarios' in request.resolver_match.app_names %}active{% endif %}"
                    href="{% url 'usuarios:lista' %}">
                     <i class="bi bi-people-fill"></i> Usuários
                 </a>
             </li>
+            {% endif %}
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="bi bi-sliders"></i> Configurações

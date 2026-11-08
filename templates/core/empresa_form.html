@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - Painel Master{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'core:empresas_lista' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i> Voltar à Lista
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <h5 class="fw-bold mb-3 text-primary border-bottom pb-2">
+                        <i class="bi bi-building me-2"></i>Dados da Empresa
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-7">
+                            <label class="form-label fw-semibold">Razão Social / Nome da Empresa *</label>
+                            {{ form.nome }}
+                            {{ form.nome.errors }}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Nome Fantasia</label>
+                            {{ form.nome_fantasia }}
+                            {{ form.nome_fantasia.errors }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">CNPJ ou CPF</label>
+                            {{ form.documento }}
+                            {{ form.documento.errors }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Telefone / WhatsApp</label>
+                            {{ form.telefone }}
+                            {{ form.telefone.errors }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">E-mail Comercial</label>
+                            {{ form.email }}
+                            {{ form.email.errors }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch mt-2">
+                                {{ form.ativo }}
+                                <label class="form-check-label fw-semibold" for="{{ form.ativo.id_for_label }}">
+                                    Empresa Ativa (Permitir acesso aos usuários)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if com_responsavel %}
+                    <h5 class="fw-bold mb-3 text-primary border-bottom pb-2 pt-3">
+                        <i class="bi bi-person-badge me-2"></i>Gestor Responsável da Empresa
+                    </h5>
+                    <p class="text-muted small">
+                        Este será o usuário principal da empresa cliente. Ele terá acesso de <strong>Gestor</strong> e poderá criar os funcionários dele.
+                    </p>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nome Completo do Responsável *</label>
+                            {{ form.responsavel_nome }}
+                            {{ form.responsavel_nome.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">E-mail do Responsável *</label>
+                            {{ form.responsavel_email }}
+                            {{ form.responsavel_email.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nome de Usuário (Login) *</label>
+                            {{ form.responsavel_username }}
+                            <div class="form-text">{{ form.responsavel_username.help_text }}</div>
+                            {{ form.responsavel_username.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Senha Inicial de Acesso *</label>
+                            <div class="input-group">
+                                {{ form.responsavel_senha }}
+                                <button class="btn btn-outline-secondary" type="button" id="toggleSenhaResponsavel">
+                                    <i class="bi bi-eye" id="toggleSenhaIcon"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">{{ form.responsavel_senha.help_text }}</div>
+                            {{ form.responsavel_senha.errors }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a href="{% url 'core:empresas_lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i> Salvar Empresa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if com_responsavel %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggleSenhaResponsavel');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                const senhaInput = document.getElementById('{{ form.responsavel_senha.id_for_label }}');
+                const toggleIcon = document.getElementById('toggleSenhaIcon');
+                if (senhaInput.type === 'password') {
+                    senhaInput.type = 'text';
+                    toggleIcon.classList.remove('bi-eye');
+                    toggleIcon.classList.add('bi-eye-slash');
+                } else {
+                    senhaInput.type = 'password';
+                    toggleIcon.classList.remove('bi-eye-slash');
+                    toggleIcon.classList.add('bi-eye');
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
+

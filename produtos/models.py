@@ -2,27 +2,38 @@
 =============================================================================
 FL3D Manager - Modelos de Dados do Módulo de Produtos (models.py)
 =============================================================================
-VISÃO GERAL E CONCEITO:
 Catálogo oficial de produtos da FL3D Studio.
 Armazena a ficha técnica, parâmetros de impressão 3D e métricas financeiras
 alinhadas com a Calculadora de Precificação.
+Agora com suporte Multi-Empresa (empresa associada a cada Categoria e Produto).
 =============================================================================
 """
 
 from django.db import models
+from core.models import Empresa
 
 
 class Categoria(models.Model):
     """
     Categoria de produtos 3D (ex: Vasos, Decoração, Utilitários, Brindes, Action Figures).
+    Isolada por empresa.
     """
-    nome = models.CharField('Nome da Categoria', max_length=100, unique=True)
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='categorias_produto',
+        verbose_name='Empresa',
+        null=True,
+        blank=True
+    )
+    nome = models.CharField('Nome da Categoria', max_length=100)
     descricao = models.TextField('Descrição', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Categoria'
         verbose_name_plural = 'Categorias'
         ordering = ['nome']
+        unique_together = ('empresa', 'nome')
 
     def __str__(self):
         return self.nome
@@ -32,7 +43,17 @@ class Produto(models.Model):
     """
     Ficha do Produto 3D. Guarda dados comerciais e métricas técnicas
     necessárias para a fabricação aditiva (impressão 3D).
+    Isolado por empresa.
     """
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='produtos',
+        verbose_name='Empresa',
+        null=True,
+        blank=True
+    )
+
     # -------------------------------------------------------------------------
     # IDENTIFICAÇÃO BÁSICA E SKU
     # -------------------------------------------------------------------------
@@ -45,7 +66,7 @@ class Produto(models.Model):
         related_name='produtos',
         verbose_name='Categoria'
     )
-    codigo = models.CharField('Código / SKU', max_length=50, unique=True, blank=True, null=True, help_text='Código SKU único interno')
+    codigo = models.CharField('Código / SKU', max_length=50, blank=True, null=True, help_text='Código SKU interno')
     descricao = models.TextField('Descrição e Especificações', blank=True, null=True)
     foto = models.ImageField('Foto do Produto', upload_to='produtos/', blank=True, null=True)
     arquivo_impressao = models.FileField('Arquivo de Impressão', upload_to='arquivos_impressao/', blank=True, null=True, help_text='Ex: .gcode, .stl, .3mf')

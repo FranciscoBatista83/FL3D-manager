@@ -93,6 +93,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware', # Descobre quem é o usuário logado
     'django.contrib.messages.middleware.MessageMiddleware',    # Permite exibir alertas na tela
     'django.middleware.clickjacking.XFrameOptionsMiddleware',  # Impede páginas de serem roubadas em iframes
+    'core.middleware.MultiEmpresaMiddleware',                  # Injeta request.empresa e protege multi-empresa
 ]
 
 # Indica qual arquivo é o mapa principal de links e páginas do sistema
@@ -116,6 +117,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',        # Permite saber se o usuário está logado
                 'django.contrib.messages.context_processors.messages',# Exibe os balões de avisos
+                'core.context_processors.empresa_context',            # Empresa ativa e perfil do usuário logado
             ],
         },
     },
@@ -193,8 +195,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # =============================================================================
 # Para onde o sistema manda o usuário quando precisa de autenticação:
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard:index' # Ao fazer login com sucesso, vai direto para o Dashboard!
+LOGIN_REDIRECT_URL = '/?from_login=1'  # Passa parâmetro para ativar o crachá de aba (sessionStorage)
 LOGOUT_REDIRECT_URL = 'login'          # Ao sair, volta para a tela de login
+
+# Sessão expira quando o navegador é fechado (força novo login a cada abertura)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Mesmo que o navegador guarde o cookie (ex: "continuar de onde parei"),
+# a sessão no servidor expira após 8 horas, forçando novo login.
+SESSION_COOKIE_AGE = 28800  # 8 horas em segundos
 
 
 # =============================================================================

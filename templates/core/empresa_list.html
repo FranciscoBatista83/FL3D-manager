@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Empresas Clientes - Painel Master{% endblock %}
+{% block page_title %}Empresas Cadastradas na Plataforma{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'core:empresa_criar' %}" class="btn btn-primary">
+    <i class="bi bi-building-add me-1"></i> Cadastrar Nova Empresa
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Buscar por Razão Social ou Nome Fantasia...">
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+                {% if request.GET.q %}
+                <a href="{% url 'core:empresas_lista' %}" class="btn btn-outline-secondary">Limpar</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Empresa</th>
+                    <th>CNPJ / CPF</th>
+                    <th>Contato</th>
+                    <th class="text-center">Usuários</th>
+                    <th class="text-center">Produtos</th>
+                    <th class="text-center">Pedidos</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for empresa in empresas %}
+                <tr>
+                    <td>
+                        <div class="fw-bold text-dark">{{ empresa.nome }}</div>
+                        {% if empresa.nome_fantasia %}
+                        <small class="text-muted">{{ empresa.nome_fantasia }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ empresa.documento|default:"-" }}</td>
+                    <td>
+                        {% if empresa.email %}<div><i class="bi bi-envelope me-1 text-muted"></i>{{ empresa.email }}</div>{% endif %}
+                        {% if empresa.telefone %}<div><i class="bi bi-whatsapp me-1 text-success"></i>{{ empresa.telefone }}</div>{% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'usuarios:lista' %}?empresa_id={{ empresa.pk }}" class="badge bg-primary-subtle text-primary text-decoration-none" title="Ver usuários desta empresa">
+                            <i class="bi bi-people me-1"></i>{{ empresa.total_usuarios }}
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary-subtle text-secondary">{{ empresa.total_produtos }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-success-subtle text-success">{{ empresa.total_pedidos }}</span>
+                    </td>
+                    <td class="text-center">
+                        {% if empresa.ativo %}
+                        <span class="badge bg-success">Ativa</span>
+                        {% else %}
+                        <span class="badge bg-danger">Suspensa</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'core:empresa_editar' empresa.pk %}" class="btn btn-outline-secondary" title="Editar Dados">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" action="{% url 'core:empresa_toggle_ativo' empresa.pk %}" class="d-inline" onsubmit="return confirm('Deseja realmente alterar o status de acesso desta empresa?');">
+                                {% csrf_token %}
+                                {% if empresa.ativo %}
+                                <button type="submit" class="btn btn-outline-warning" title="Suspender Empresa">
+                                    <i class="bi bi-pause-circle"></i>
+                                </button>
+                                {% else %}
+                                <button type="submit" class="btn btn-outline-success" title="Ativar Empresa">
+                                    <i class="bi bi-play-circle"></i>
+                                </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        Nenhuma empresa encontrada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

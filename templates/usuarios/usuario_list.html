@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}Usuários do Sistema - FL3D Manager{% endblock %}
-{% block page_title %}Usuários do Sistema{% endblock %}
+{% block title %}Usuários da Empresa - FL3D Manager{% endblock %}
+{% block page_title %}Usuários e Acessos{% endblock %}
 
 {% block page_actions %}
 <a href="{% url 'usuarios:novo' %}" class="btn btn-sm"
@@ -43,7 +43,6 @@
     }
     .table td { font-size: 0.88rem; vertical-align: middle; }
 
-    /* Avatar circular com iniciais */
     .user-avatar {
         width: 38px;
         height: 38px;
@@ -59,11 +58,9 @@
         flex-shrink: 0;
     }
 
-    /* Badge de status */
     .badge-ativo   { background:#E8F5E9; color:#2E7D32; font-size:0.72rem; padding:4px 10px; border-radius:20px; font-weight:600; }
     .badge-inativo { background:#FFEBEE; color:#C62828; font-size:0.72rem; padding:4px 10px; border-radius:20px; font-weight:600; }
 
-    /* Botões de ação */
     .btn-editar {
         background: rgba(45,27,105,0.08);
         color: #2D1B69;
@@ -82,15 +79,42 @@
     .btn-toggle-ativo:hover   { background: rgba(220,53,69,0.20); }
     .btn-toggle-inativo:hover { background: rgba(76,175,80,0.22); }
 
-    /* Linha do usuário logado atualmente */
     .linha-atual { background: rgba(45,27,105,0.03); }
 </style>
 {% endblock %}
 
 {% block content %}
+{% if is_master and todas_empresas %}
+<div class="card shadow-sm border-0 mb-3" style="border-radius: 12px;">
+    <div class="card-body py-2 px-3">
+        <form method="get" class="d-flex align-items-center gap-2">
+            <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i>Filtrar por Empresa:</span>
+            <select name="empresa_id" class="form-select form-select-sm" style="max-width: 280px;" onchange="this.form.submit()">
+                <option value="">Todas as Empresas</option>
+                {% for emp in todas_empresas %}
+                <option value="{{ emp.id }}" {% if empresa_id_filtro == emp.id|stringformat:"s" %}selected{% endif %}>
+                    {{ emp.nome }}
+                </option>
+                {% endfor %}
+            </select>
+            {% if empresa_id_filtro %}
+            <a href="{% url 'usuarios:lista' %}" class="btn btn-sm btn-outline-secondary">Limpar Filtro</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endif %}
+
 <div class="user-card">
-    <div class="card-header">
-        <h6><i class="bi bi-people-fill"></i> Todos os Usuários</h6>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6>
+            <i class="bi bi-people-fill"></i> Usuários
+            {% if is_master %}
+                <span class="badge bg-danger ms-2">Visão Master (Todas as Empresas)</span>
+            {% elif empresa_atual %}
+                <span class="badge bg-primary-subtle text-primary ms-2">{{ empresa_atual.nome }}</span>
+            {% endif %}
+        </h6>
         <small class="text-muted">{{ usuarios.count }} usuário(s) cadastrado(s)</small>
     </div>
     <div class="table-responsive">
@@ -99,6 +123,10 @@
                 <tr>
                     <th class="ps-3">Usuário</th>
                     <th>Nome Completo</th>
+                    {% if is_master %}
+                    <th>Empresa</th>
+                    {% endif %}
+                    <th>Função / Nível</th>
                     <th>E-mail</th>
                     <th class="text-center">Status</th>
                     <th class="text-end pe-3">Ações</th>
@@ -107,7 +135,6 @@
             <tbody>
                 {% for u in usuarios %}
                 <tr {% if u == request.user %}class="linha-atual"{% endif %}>
-                    <!-- Avatar + login -->
                     <td class="ps-3">
                         <div class="d-flex align-items-center gap-2">
                             <div class="user-avatar">
@@ -124,7 +151,6 @@
                         </div>
                     </td>
 
-                    <!-- Nome completo -->
                     <td>
                         {% if u.get_full_name %}
                             {{ u.get_full_name }}
@@ -133,7 +159,26 @@
                         {% endif %}
                     </td>
 
-                    <!-- E-mail -->
+                    {% if is_master %}
+                    <td>
+                        {% if u.perfil and u.perfil.empresa %}
+                            <span class="badge bg-light text-dark border">{{ u.perfil.empresa.nome }}</span>
+                        {% else %}
+                            <span class="badge bg-dark">Plataforma (Master)</span>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+
+                    <td>
+                        {% if u.perfil.nivel == 'master' %}
+                            <span class="badge bg-danger">Super Admin Master</span>
+                        {% elif u.perfil.nivel == 'gestor' %}
+                            <span class="badge bg-primary">Gestor da Empresa</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Operador</span>
+                        {% endif %}
+                    </td>
+
                     <td>
                         {% if u.email %}
                             {{ u.email }}
@@ -142,7 +187,6 @@
                         {% endif %}
                     </td>
 
-                    <!-- Status -->
                     <td class="text-center">
                         {% if u.is_active %}
                             <span class="badge-ativo"><i class="bi bi-check-circle-fill me-1"></i>Ativo</span>
@@ -151,15 +195,12 @@
                         {% endif %}
                     </td>
 
-                    <!-- Ações -->
                     <td class="text-end pe-3">
                         <div class="d-flex justify-content-end gap-2">
-                            <!-- Botão editar -->
                             <a href="{% url 'usuarios:editar' u.pk %}" class="btn-editar">
                                 <i class="bi bi-pencil-fill me-1"></i>Editar
                             </a>
 
-                            <!-- Botão ativar/desativar via POST -->
                             {% if u != request.user %}
                             <form method="post" action="{% url 'usuarios:toggle' u.pk %}"
                                   style="display:inline;"
@@ -176,7 +217,6 @@
                                 {% endif %}
                             </form>
                             
-                            <!-- Botão excluir -->
                             <a href="{% url 'usuarios:excluir' u.pk %}" class="btn-toggle-ativo" title="Excluir Definitivamente">
                                 <i class="bi bi-trash-fill"></i>
                             </a>
@@ -186,9 +226,9 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
+                    <td colspan="6" class="text-center py-5 text-muted">
                         <i class="bi bi-people" style="font-size:2rem;opacity:0.3;"></i>
-                        <div class="mt-2">Nenhum usuário encontrado.</div>
+                        <div class="mt-2">Nenhum usuário encontrado para esta empresa.</div>
                     </td>
                 </tr>
                 {% endfor %}

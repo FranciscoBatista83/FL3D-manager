@@ -2,40 +2,32 @@
 =============================================================================
 FL3D Manager - Visualizações do Módulo de Impressoras (views.py)
 =============================================================================
-VISÃO GERAL E CONCEITO:
-Este arquivo gerencia todas as operações relacionadas às máquinas da oficina:
-  1. LISTAGEM: exibe a lista completa de impressoras com seus status operacionais
-     (verde para disponível, azul para imprimindo, amarelo para manutenção).
-  2. CADASTRO: adiciona uma nova máquina ao parque fabril.
-  3. EDIÇÃO: atualiza informações, troca status para manutenção e inclui notas de reparo.
-  4. DETALHE DA MÁQUINA: mostra as especificações da impressora e as últimas 20
-     peças impressas nela (histórico de produção).
-  5. EXCLUSÃO: remove a máquina do sistema quando for descartada ou vendida.
+Gerenciamento de impressoras com suporte Multi-Empresa.
 =============================================================================
 """
 
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 
+from core.mixins import EmpresaScopedMixin
 from .models import Impressora
 from .forms import ImpressoraForm
 
 
-class ImpressoraListView(LoginRequiredMixin, ListView):
+class ImpressoraListView(EmpresaScopedMixin, ListView):
     """
-    Tela principal que lista todo o parque de impressoras 3D da oficina.
+    Tela principal que lista todo o parque de impressoras 3D da empresa.
     """
     model = Impressora
     template_name = 'impressoras/impressora_list.html'
     context_object_name = 'impressoras'
 
 
-class ImpressoraCreateView(LoginRequiredMixin, CreateView):
+class ImpressoraCreateView(EmpresaScopedMixin, CreateView):
     """
-    Tela para cadastrar uma nova impressora 3D comprada pela FL3D Studio.
+    Tela para cadastrar uma nova impressora 3D para a empresa.
     """
     model = Impressora
     form_class = ImpressoraForm
@@ -52,9 +44,9 @@ class ImpressoraCreateView(LoginRequiredMixin, CreateView):
         return ctx
 
 
-class ImpressoraUpdateView(LoginRequiredMixin, UpdateView):
+class ImpressoraUpdateView(EmpresaScopedMixin, UpdateView):
     """
-    Tela para alterar dados técnicos ou o status da impressora (ex: colocar em manutenção).
+    Tela para alterar dados técnicos ou o status da impressora.
     """
     model = Impressora
     form_class = ImpressoraForm
@@ -71,10 +63,9 @@ class ImpressoraUpdateView(LoginRequiredMixin, UpdateView):
         return ctx
 
 
-class ImpressoraDetailView(LoginRequiredMixin, DetailView):
+class ImpressoraDetailView(EmpresaScopedMixin, DetailView):
     """
     Tela de visão detalhada de uma máquina específica.
-    Permite consultar as últimas 20 impressões realizadas por ela.
     """
     model = Impressora
     template_name = 'impressoras/impressora_detail.html'
@@ -82,14 +73,13 @@ class ImpressoraDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        # Recupera as 20 produções mais recentes feitas nesta impressora
         ctx['impressoes'] = self.object.producoes.all().order_by('-data_inicio')[:20]
         return ctx
 
 
-class ImpressoraDeleteView(LoginRequiredMixin, DeleteView):
+class ImpressoraDeleteView(EmpresaScopedMixin, DeleteView):
     """
-    Tela de confirmação para remover uma impressora do sistema.
+    Tela de confirmação para remover uma impressora da empresa.
     """
     model = Impressora
     template_name = 'impressoras/impressora_confirm_delete.html'

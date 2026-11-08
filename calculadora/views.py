@@ -15,14 +15,16 @@ def index(request):
     Renderiza a interface da Calculadora de Precificação do FL3D Manager.
     Pode receber 'produto_id' via GET para carregar os dados de uma peça já cadastrada.
     """
+    empresa = getattr(request, 'empresa', None)
     produto = None
     horas_impressao = None
     dados_produto = None
-    categorias = Categoria.objects.all()
+    categorias = Categoria.objects.filter(empresa=empresa) if empresa else Categoria.objects.all()
     produto_id = request.GET.get('produto_id')
     if produto_id:
         try:
-            produto = get_object_or_404(Produto, pk=produto_id)
+            qs = Produto.objects.filter(empresa=empresa) if empresa else Produto.objects.all()
+            produto = get_object_or_404(qs, pk=produto_id)
             if produto.tempo_estimado:
                 total_seg = produto.tempo_estimado.total_seconds()
                 horas_impressao = round(total_seg / 3600, 2)
@@ -197,8 +199,10 @@ def salvar_produto_api(request):
         # Converte horas float em DurationField (timedelta)
         tempo_estimado = timedelta(hours=horas_impressao) if horas_impressao > 0 else None
 
+        empresa = getattr(request, 'empresa', None)
         if produto_id:
-            produto = get_object_or_404(Produto, pk=produto_id)
+            qs = Produto.objects.filter(empresa=empresa) if empresa else Produto.objects.all()
+            produto = get_object_or_404(qs, pk=produto_id)
             produto.nome = nome
             produto.categoria = categoria
             produto.peso_estimado = peso_g
@@ -242,6 +246,7 @@ def salvar_produto_api(request):
         else:
             # Cria o Produto no Banco de Dados
             produto = Produto.objects.create(
+                empresa=empresa,
                 nome=nome,
                 categoria=categoria,
                 peso_estimado=peso_g,

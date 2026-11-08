@@ -2,20 +2,13 @@
 =============================================================================
 FL3D Manager - Visualizações do Módulo Financeiro (views.py)
 =============================================================================
-VISÃO GERAL E CONCEITO:
-Este arquivo cuida de toda a contabilidade e inteligência financeira da oficina:
-  1. DASHBOARD FINANCEIRO: calcula faturamento mensal, total de despesas e o saldo
-     líquido (lucro). Além disso, prepara os dados dos últimos 6 meses em formato JSON
-     para desenhar gráficos comparativos na tela (Barras de Receitas vs Despesas).
-  2. LISTA DE LANÇAMENTOS: extrato completo de todas as movimentações, com filtros
-     por tipo (entradas/saídas) e mês, somando o total acumulado na tela.
-  3. NOVO LANÇAMENTO: registro de receitas ou despesas com categoria e pedido vinculado.
-  4. RELATÓRIO ANALÍTICO DE CAIXA: tela que gera o balanço de qualquer período
-     escolhido (ex: últimos 3 meses) agrupando as despesas por categoria
-     (quanto foi gasto em filamento, quanto em energia, quanto em fretes).
+Dashboard e movimentações financeiras com suporte Multi-Empresa.
 =============================================================================
 """
 
+import json
+from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, View
@@ -23,42 +16,39 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Sum, Q
 from django.utils import timezone
-import json
-from datetime import date, timedelta
-from dateutil.relativedelta import relativedelta
 
+from core.mixins import EmpresaScopedMixin
 from .models import MovimentacaoFinanceira
 from .forms import MovimentacaoFinanceiraForm, RelatorioFiltroForm
 
 
 class DashboardFinanceiroView(LoginRequiredMixin, View):
     """
-    Painel Financeiro com indicadores do mês corrente e gráfico dos últimos 6 meses.
+    Painel Financeiro com indicadores da empresa logada.
     """
     template_name = 'financeiro/financeiro_dashboard.html'
 
     def get(self, request):
+        empresa = getattr(request, 'empresa', None)
+        base_qs = MovimentacaoFinanceira.objects.filter(empresa=empresa) if empresa else MovimentacaoFinanceira.objects.all()
+
         hoje = timezone.now().date()
         inicio_mes = hoje.replace(day=1)
 
-        # 1. Total de Receitas do Mês Atual (Entradas)
-        receitas_mes = MovimentacaoFinanceira.objects.filter(
+        receitas_mes = base_qs.filter(
             tipo=MovimentacaoFinanceira.TipoChoices.ENTRADA,
             data__gte=inicio_mes,
             data__lte=hoje,
         ).aggregate(total=Sum('valor'))['total'] or 0
 
-        # 2. Total de Despesas do Mês Atual (Saídas)
-        despesas_mes = MovimentacaoFinanceira.objects.filter(
+        despesas_mes = base_qs.filter(
             tipo=MovimentacaoFinanceira.TipoChoices.SAIDA,
             data__gte=inicio_mes,
             data__lte=hoje,
         ).aggregate(total=Sum('valor'))['total'] or 0
 
-        # 3. Lucro Líquido do Mês = Receitas - Despesas
         saldo_mes = receitas_mes - despesas_mes
 
-        # 4. Histórico dos Últimos 6 Meses para o Gráfico Visual (Chart.js)
         labels, dados_receitas, dados_despesas = [], [], []
         for i in range(5, -1, -1):
             ref = hoje - relativedelta(months=i)
@@ -68,15 +58,13 @@ class DashboardFinanceiroView(LoginRequiredMixin, View):
             else:
                 fim = hoje
 
-            # Receitas daquele mês específico
-            r = MovimentacaoFinanceira.objects.filter(
+            r = base_qs.filter(
                 tipo=MovimentacaoFinanceira.TipoChoices.ENTRADA,
                 data__gte=inicio,
                 data__lte=fim,
             ).aggregate(total=Sum('valor'))['total'] or 0
 
-            # Despesas daquele mês específico
-            d = MovimentacaoFinanceira.objects.filter(
+            d = base_qs.filter(
                 tipo=MovimentacaoFinanceira.TipoChoices.SAIDA,
                 data__gte=inicio,
                 data__lte=fim,
@@ -97,9 +85,9 @@ class DashboardFinanceiroView(LoginRequiredMixin, View):
         })
 
 
-class MovimentacaoFinanceiraListView(LoginRequiredMixin, ListView):
+class MovimentacaoFinanceiraListView(EmpresaScopedMixin, ListView):
     """
-    Extrato de Lançamentos Financeiros com filtros por tipo e mês, além de somatório automático.
+    Extrato de Lançamentos Financeiros da empresa logada.
     """
     model = MovimentacaoFinanceira
     template_name = 'financeiro/lancamento_list.html'
@@ -111,11 +99,8 @@ class MovimentacaoFinanceiraListView(LoginRequiredMixin, ListView):
         tipo = self.request.GET.get('tipo')
         mes = self.request.GET.get('mes')
         
-        # Filtra por tipo (Entrada ou Saída)
         if tipo:
             qs = qs.filter(tipo=tipo)
-        
-        # Filtra por Ano-Mês selecionado no cabeçalho (ex: '2026-09')
         if mes:
             try:
                 ano, m = mes.split('-')
@@ -127,7 +112,6 @@ class MovimentacaoFinanceiraListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         qs = self.get_queryset()
-        # Calcula as somas totais com base nos filtros ativos
         ctx['total_receitas'] = qs.filter(tipo='entrada').aggregate(t=Sum('valor'))['t'] or 0
         ctx['total_despesas'] = qs.filter(tipo='saida').aggregate(t=Sum('valor'))['t'] or 0
         ctx['tipo_filtro'] = self.request.GET.get('tipo', '')
@@ -136,9 +120,9 @@ class MovimentacaoFinanceiraListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class MovimentacaoFinanceiraCreateView(LoginRequiredMixin, CreateView):
+class MovimentacaoFinanceiraCreateView(EmpresaScopedMixin, CreateView):
     """
-    Tela para lançamento manual de uma nova entrada ou saída de caixa.
+    Lançamento manual para a empresa logada.
     """
     model = MovimentacaoFinanceira
     form_class = MovimentacaoFinanceiraForm
@@ -155,9 +139,9 @@ class MovimentacaoFinanceiraCreateView(LoginRequiredMixin, CreateView):
         return ctx
 
 
-class MovimentacaoFinanceiraUpdateView(LoginRequiredMixin, UpdateView):
+class MovimentacaoFinanceiraUpdateView(EmpresaScopedMixin, UpdateView):
     """
-    Tela para retificação ou edição de um lançamento financeiro já existente.
+    Edição de lançamento da empresa.
     """
     model = MovimentacaoFinanceira
     form_class = MovimentacaoFinanceiraForm
@@ -174,9 +158,9 @@ class MovimentacaoFinanceiraUpdateView(LoginRequiredMixin, UpdateView):
         return ctx
 
 
-class MovimentacaoFinanceiraDeleteView(LoginRequiredMixin, DeleteView):
+class MovimentacaoFinanceiraDeleteView(EmpresaScopedMixin, DeleteView):
     """
-    Exclusão de um lançamento financeiro indevido ou incorreto.
+    Exclusão de lançamento da empresa.
     """
     model = MovimentacaoFinanceira
     template_name = 'financeiro/lancamento_confirm_delete.html'
@@ -189,19 +173,21 @@ class MovimentacaoFinanceiraDeleteView(LoginRequiredMixin, DeleteView):
 
 class RelatorioView(LoginRequiredMixin, View):
     """
-    Relatório Financeiro por Período Personalizado com Demonstração por Categorias.
+    Relatório Financeiro filtrado pela empresa.
     """
     template_name = 'financeiro/relatorio.html'
 
     def get(self, request):
         form = RelatorioFiltroForm(request.GET or None)
+        empresa = getattr(request, 'empresa', None)
+        base_qs = MovimentacaoFinanceira.objects.filter(empresa=empresa) if empresa else MovimentacaoFinanceira.objects.all()
+
         lancamentos = None
         total_receitas = total_despesas = saldo = 0
         por_categoria = []
 
         if form.is_valid():
-            # 1. Filtra as movimentações dentro da janela de datas
-            qs = MovimentacaoFinanceira.objects.filter(
+            qs = base_qs.filter(
                 data__gte=form.cleaned_data['data_inicio'],
                 data__lte=form.cleaned_data['data_fim'],
             ).select_related('pedido').order_by('data')
@@ -211,13 +197,10 @@ class RelatorioView(LoginRequiredMixin, View):
                 qs = qs.filter(tipo=tipo)
 
             lancamentos = qs
-            
-            # 2. Totalizadores do período selecionado
             total_receitas = qs.filter(tipo='entrada').aggregate(t=Sum('valor'))['t'] or 0
             total_despesas = qs.filter(tipo='saida').aggregate(t=Sum('valor'))['t'] or 0
             saldo = total_receitas - total_despesas
 
-            # 3. Agrupamento por Categoria (Filamento, Energia, Embalagens, Vendas)
             categorias = {}
             for l in qs:
                 cat_nome = l.get_categoria_display()

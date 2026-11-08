@@ -5,12 +5,13 @@ FL3D Manager - Formulários do Módulo de Produtos (forms.py)
 """
 
 from django import forms
-from .models import Produto
+from .models import Produto, Categoria
 
 
 class ProdutoForm(forms.ModelForm):
     """
     Formulário para cadastrar e editar Produtos 3D (integrado à Calculadora).
+    Filtra categorias pela empresa do usuário atual.
     """
     class Meta:
         model = Produto
@@ -28,9 +29,18 @@ class ProdutoForm(forms.ModelForm):
             'ativo',
         ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, empresa=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.empresa = empresa
         is_new = not self.instance.pk
+
+        # Filtra categorias pela empresa atual
+        if 'categoria' in self.fields:
+            if empresa:
+                self.fields['categoria'].queryset = Categoria.objects.filter(empresa=empresa)
+            elif self.instance.pk and self.instance.empresa:
+                self.fields['categoria'].queryset = Categoria.objects.filter(empresa=self.instance.empresa)
+
         for field_name, field in self.fields.items():
             if field_name == 'ativo':
                 field.widget.attrs['class'] = 'form-check-input'

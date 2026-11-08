@@ -27,13 +27,18 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from fl3d_manager.views import FL3DLoginView
 
 # Lista de rotas mestras do sistema
 urlpatterns = [
     # 1. Painel Administrativo interno do Django (gerenciamento avançado)
     path('admin/', admin.site.urls),
     
-    # 2. Rotas padrão de autenticação do Django (login, logout, etc.)
+    # 2. Login customizado: sempre redireciona para /?from_login=1 após login
+    #    (garante funcionamento do crachá de sessão por aba via sessionStorage)
+    path('accounts/login/', FL3DLoginView.as_view(), name='login'),
+
+    # 3. Demais rotas de autenticação do Django (logout, troca de senha, etc.)
     path('accounts/', include('django.contrib.auth.urls')),
     
     # 3. Módulo de Clientes: cadastro, visualização, edição e histórico
@@ -63,7 +68,10 @@ urlpatterns = [
     # 11. Módulo Calculadora: ferramentas de cálculo e custos de impressão 3D
     path('calculadora/', include('calculadora.urls')),
 
-    # 12. Raiz do Sistema ('/'): carrega diretamente o Painel Principal (Dashboard)
+    # 12. Gestão de Empresas (Painel Master da Plataforma)
+    path('sistema/', include('core.urls')),
+
+    # 13. Raiz do Sistema ('/'): carrega diretamente o Painel Principal (Dashboard)
     path('', include('dashboard.urls')),
 ]
 

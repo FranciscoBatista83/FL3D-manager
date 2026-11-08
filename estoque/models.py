@@ -2,33 +2,29 @@
 =============================================================================
 FL3D Manager - Modelos de Dados do Módulo de Estoque (models.py)
 =============================================================================
-VISÃO GERAL E CONCEITO:
-Na impressão 3D (FDM), o filamento plástico é o sangue da oficina!
-Compramos carretéis (bobinas) que normalmente vêm com 1.000 gramas (1 kg).
-Conforme as impressoras imprimem as peças dos clientes, esse plástico vai sendo
-derretido e gasto grama por grama.
-
-Este arquivo cria duas tabelas essenciais:
-  1. 'Filamento': É o carretel individual que você tem na prateleira.
-     - Guarda: Marca, Tipo do Plástico (PLA, PETG, ABS), Cor exata,
-       Peso Inicial (ex: 1000g), Peso Atual Restante (ex: 430g), Custo do Rolo (R$),
-       Fornecedor e Localização física (ex: "Gaveta 2", "Estufa de Secagem").
-  2. 'MovimentacaoEstoque': É o extrato bancário de cada grama de filamento.
-     - Toda vez que entra um rolo novo, que uma peça é impressa (consumo),
-       que uma impressão falha (perda) ou que você pesa o rolo na balança
-       (ajuste manual), uma linha é gerada aqui registrando quem fez, quando,
-       quanto pesava antes, quanto pesou depois e a diferença!
+Controle de carretéis de filamento e movimentações de estoque.
+Agora com suporte Multi-Empresa.
 =============================================================================
 """
 
 from django.db import models
 from django.contrib.auth.models import User
+from core.models import Empresa
 
 
 class Filamento(models.Model):
     """
     Representa um produto / item físico no estoque da oficina 3D.
+    Isolado por empresa.
     """
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='filamentos',
+        verbose_name='Empresa',
+        null=True,
+        blank=True
+    )
     nome = models.CharField('Nome', max_length=150, blank=True, null=True)
     marca = models.CharField('Marca', max_length=100, blank=True, null=True)
     material = models.CharField('Material', max_length=100, blank=True, null=True)
@@ -58,46 +54,26 @@ class Filamento(models.Model):
 
 class MovimentacaoEstoque(models.Model):
     """
-    Histórico imutável (livro-razão) de todas as alterações de peso dos filamentos.
-    Garante rastreabilidade total de para onde foi cada grama de matéria-prima.
+    Histórico imutável de todas as alterações de estoque.
     """
     class TipoChoices(models.TextChoices):
-        """
-        Tipos possíveis de movimentação de material.
-        """
-        ENTRADA = 'entrada', 'Entrada'               # Chegada de novo rolo na oficina
-        CONSUMO = 'consumo', 'Consumo (Produção)'     # Gasto na impressão de uma peça com sucesso
-        PERDA = 'perda', 'Perda'                     # Peça descolou, bico entupiu ou faltou luz
-        AJUSTE = 'ajuste', 'Ajuste Manual'           # Operador pesou o carretel e corrigiu a diferença
+        ENTRADA = 'entrada', 'Entrada'
+        CONSUMO = 'consumo', 'Consumo (Produção)'
+        PERDA = 'perda', 'Perda'
+        AJUSTE = 'ajuste', 'Ajuste Manual'
 
-    # Carretel que sofreu a movimentação.
-    # on_delete=models.PROTECT impede que alguém apague um filamento que já tenha movimentações
     filamento = models.ForeignKey(Filamento, on_delete=models.PROTECT, related_name='movimentacoes')
-    
-    # Tipo de operação realizada (escolhido entre as opções acima)
     tipo = models.CharField('Tipo de Movimentação', max_length=20, choices=TipoChoices.choices)
-    
-    # Momento exato em que a movimentação ocorreu
     data = models.DateTimeField('Data e Hora', auto_now_add=True)
-    
-    # Quantidade em gramas alterada (positivo para entrada, negativo para consumo/perda)
     quantidade = models.DecimalField(
         'Quantidade (g)', 
         max_digits=8, 
         decimal_places=2, 
         help_text="Valores positivos para entrada, negativos para saída"
     )
-    
-    # Peso que estava gravado no sistema antes desta operação
     quantidade_anterior = models.DecimalField('Quantidade Anterior (g)', max_digits=8, decimal_places=2, blank=True, null=True)
-    
-    # Peso que ficou gravado após a operação
     quantidade_nova = models.DecimalField('Quantidade Nova (g)', max_digits=8, decimal_places=2, blank=True, null=True)
-    
-    # Justificativa da alteração (ex: "Impressão da Ordem #42 finalizada", "Aferição periódica na balança")
     motivo = models.TextField('Motivo / Observação', blank=True, null=True)
-    
-    # Usuário (operador da oficina) que realizou a pesagem ou ação
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
@@ -107,4 +83,3 @@ class MovimentacaoEstoque(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} - {self.filamento} ({self.quantidade}g)"
-

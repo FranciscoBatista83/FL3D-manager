@@ -38,14 +38,14 @@
                         </div>
                         {% endif %}
 
-                        <form method="post" action="{% url 'login' %}">
+                        <form method="post" action="{% url 'login' %}" autocomplete="off">
                             {% csrf_token %}
                             
                             <div class="mb-3">
                                 <label for="id_username" class="form-label fw-bold">Usuário</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
-                                    <input type="text" name="username" class="form-control" id="id_username" required autofocus>
+                                    <input type="text" name="username" class="form-control" id="id_username" autocomplete="off" required autofocus>
                                 </div>
                             </div>
 
@@ -53,7 +53,7 @@
                                 <label for="id_password" class="form-label fw-bold">Senha</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
-                                    <input type="password" name="password" class="form-control" id="id_password" required>
+                                    <input type="password" name="password" class="form-control" id="id_password" autocomplete="new-password" required>
                                     <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                         <i class="bi bi-eye" id="toggleIcon"></i>
                                     </button>
@@ -66,6 +66,12 @@
                             <input type="hidden" name="next" value="{{ next }}">
                         </form>
                         <script>
+                            // Garante que os campos ficam vazios ao abrir (evita preenchimento automático do navegador)
+                            window.addEventListener('load', function () {
+                                document.getElementById('id_username').value = '';
+                                document.getElementById('id_password').value = '';
+                            });
+
                             document.getElementById('togglePassword').addEventListener('click', function (e) {
                                 const passwordInput = document.getElementById('id_password');
                                 const toggleIcon = document.getElementById('toggleIcon');

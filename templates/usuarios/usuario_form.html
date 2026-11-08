@@ -38,14 +38,14 @@
         letter-spacing: 0.4px;
         margin-bottom: 4px;
     }
-    .form-control {
+    .form-control, .form-select {
         border-radius: 10px;
         border: 1px solid #e0e0e0;
         font-size: 0.9rem;
         padding: 10px 14px;
         transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .form-control:focus {
+    .form-control:focus, .form-select:focus {
         border-color: #7B2D8B;
         box-shadow: 0 0 0 3px rgba(123,45,139,0.12);
         outline: none;
@@ -93,22 +93,40 @@
     }
     .btn-cancelar:hover { background: rgba(45,27,105,0.15); color: #2D1B69; }
 
-    /* Checkbox de "Usuário Ativo" estilizado */
     .form-check-input:checked {
         background-color: #A0155A;
         border-color: #A0155A;
     }
-    .form-check-input:focus {
-        box-shadow: 0 0 0 3px rgba(160,21,90,0.15);
-        border-color: #A0155A;
-    }
     .invalid-feedback { font-size: 0.78rem; }
+
+    /* Requisitos de senha dinâmicos */
+    .senha-requisitos {
+        margin-top: 8px;
+        padding: 10px 12px;
+        background: #f9f7ff;
+        border-radius: 8px;
+        border: 1px solid #e8e0f5;
+        font-size: 0.78rem;
+        display: none; /* aparece só ao digitar */
+    }
+    .senha-requisitos.visivel { display: block; }
+    .requisito {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+        font-weight: 500;
+        color: #dc3545; /* vermelho padrão */
+        transition: color 0.2s;
+    }
+    .requisito:last-child { margin-bottom: 0; }
+    .requisito.ok { color: #198754; } /* verde quando atendido */
+    .requisito i { font-size: 0.75rem; min-width: 12px; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="form-card card mx-auto">
-    <!-- Cabeçalho colorido do formulário -->
     <div class="card-header">
         <h5>
             <i class="bi bi-person-fill me-2"></i>{{ titulo }}
@@ -116,25 +134,31 @@
     </div>
 
     <div class="card-body p-4">
-        <form method="post" novalidate>
+        <form method="post" autocomplete="off" novalidate>
             {% csrf_token %}
 
-            <!-- ============================================================
-                 SEÇÃO: ACESSO AO SISTEMA
-                 ============================================================ -->
             <div class="section-divider"><i class="bi bi-key-fill me-1"></i>Acesso ao Sistema</div>
-            <div class="mb-3">
-                <label class="form-label" for="{{ form.username.id_for_label }}">
-                    {{ form.username.label }}
-                </label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                    <div class="invalid-feedback d-block">{{ form.username.errors|join:", " }}</div>
-                {% endif %}
-                <div class="form-text">Este será o nome usado para fazer login. Sem espaços ou acentos.</div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.username.id_for_label }}">
+                        {{ form.username.label }}
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback d-block">{{ form.username.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.nivel.id_for_label }}">
+                        {{ form.nivel.label }}
+                    </label>
+                    {{ form.nivel }}
+                    {% if form.nivel.errors %}
+                        <div class="invalid-feedback d-block">{{ form.nivel.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- Campos de senha (aparecem em ambos os formulários) -->
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label" for="{{ form.password1.id_for_label }}">
@@ -149,9 +173,22 @@
                     {% if form.password1.errors %}
                         <div class="invalid-feedback d-block">{{ form.password1.errors|join:", " }}</div>
                     {% endif %}
-                    {% if form.password1.help_text %}
-                        <div class="form-text">{{ form.password1.help_text }}</div>
-                    {% endif %}
+
+                    <!-- Requisitos de senha dinâmicos -->
+                    <div class="senha-requisitos" id="senha-requisitos">
+                        <div class="requisito" id="req-maiuscula">
+                            <i class="bi bi-x-circle-fill"></i> Pelo menos 1 maiúscula e 1 minúscula
+                        </div>
+                        <div class="requisito" id="req-numero">
+                            <i class="bi bi-x-circle-fill"></i> Letras e números (mínimo 1 de cada)
+                        </div>
+                        <div class="requisito" id="req-especial">
+                            <i class="bi bi-x-circle-fill"></i> Pelo menos 1 caractere especial (!@#$%...)
+                        </div>
+                        <div class="requisito" id="req-tamanho">
+                            <i class="bi bi-x-circle-fill"></i> Mínimo de 8 caracteres
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="{{ form.password2.id_for_label }}">
@@ -169,9 +206,6 @@
                 </div>
             </div>
 
-            <!-- ============================================================
-                 SEÇÃO: DADOS PESSOAIS
-                 ============================================================ -->
             <div class="section-divider"><i class="bi bi-person-vcard me-1"></i>Dados Pessoais</div>
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
@@ -193,17 +227,27 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="{{ form.email.id_for_label }}">
-                    {{ form.email.label }}
-                </label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                    <div class="invalid-feedback d-block">{{ form.email.errors|join:", " }}</div>
-                {% endif %}
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.email.id_for_label }}">
+                        {{ form.email.label }}
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback d-block">{{ form.email.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.telefone.id_for_label }}">
+                        {{ form.telefone.label }}
+                    </label>
+                    {{ form.telefone }}
+                    {% if form.telefone.errors %}
+                        <div class="invalid-feedback d-block">{{ form.telefone.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- Status ativo/inativo — só aparece no formulário de EDIÇÃO -->
             {% if form.is_active %}
             <div class="mb-4">
                 <div class="form-check form-switch">
@@ -217,7 +261,6 @@
             </div>
             {% endif %}
 
-            <!-- Erros gerais do formulário (ex: senhas diferentes) -->
             {% if form.non_field_errors %}
             <div class="alert alert-danger rounded-3 py-2 px-3 mb-3" style="font-size:0.85rem;">
                 <i class="bi bi-exclamation-triangle-fill me-1"></i>
@@ -225,9 +268,6 @@
             </div>
             {% endif %}
 
-            <!-- ============================================================
-                 BOTÕES DE AÇÃO
-                 ============================================================ -->
             <hr style="border-color:rgba(45,27,105,0.10);">
             <div class="d-flex gap-3 align-items-center">
                 <button type="submit" class="btn-salvar">
@@ -242,6 +282,23 @@
 </div>
 
 <script>
+    {% if not form.instance.pk %}
+    // Limpa qualquer dado que o navegador tente injetar automaticamente na criação de novo usuário
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function() {
+            const loginInput = document.getElementById('{{ form.username.id_for_label }}');
+            const pass1 = document.getElementById('{{ form.password1.id_for_label }}');
+            const pass2 = document.getElementById('{{ form.password2.id_for_label }}');
+            if (loginInput && !loginInput.value.trim() && pass1) {
+                pass1.value = '';
+            }
+            if (pass2) {
+                pass2.value = '';
+            }
+        }, 100);
+    });
+    {% endif %}
+
     function togglePasswordVisibility(inputId, iconId) {
         const passwordInput = document.getElementById(inputId);
         const toggleIcon = document.getElementById(iconId);
@@ -255,5 +312,41 @@
             toggleIcon.classList.add('bi-eye');
         }
     }
+
+    // ── Validação dinâmica de requisitos de senha ──────────────────────────
+    (function () {
+        const senhaInput = document.getElementById('{{ form.password1.id_for_label }}');
+        const bloco     = document.getElementById('senha-requisitos');
+
+        if (!senhaInput || !bloco) return;
+
+        function checarRequisito(idReq, atendido) {
+            const el   = document.getElementById(idReq);
+            const icon = el.querySelector('i');
+            if (atendido) {
+                el.classList.add('ok');
+                icon.className = 'bi bi-check-circle-fill';
+            } else {
+                el.classList.remove('ok');
+                icon.className = 'bi bi-x-circle-fill';
+            }
+        }
+
+        senhaInput.addEventListener('input', function () {
+            const v = senhaInput.value;
+
+            // Mostra o bloco assim que o usuário começar a digitar
+            if (v.length > 0) {
+                bloco.classList.add('visivel');
+            } else {
+                bloco.classList.remove('visivel');
+            }
+
+            checarRequisito('req-maiuscula', /[A-Z]/.test(v) && /[a-z]/.test(v));
+            checarRequisito('req-numero',    /[0-9]/.test(v) && /[a-zA-Z]/.test(v));
+            checarRequisito('req-especial',  /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(v));
+            checarRequisito('req-tamanho',   v.length >= 8);
+        });
+    })();
 </script>
 {% endblock %}
